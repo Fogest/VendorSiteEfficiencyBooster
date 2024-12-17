@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v4.4.3
         with:
           name: extension
-          path: dist/extension.zip
+          path: extension.zip
 
   release:
     needs: build
@@ -55,7 +55,7 @@ jobs:
 
       # List dist directory contents again to verify the ZIP exists before release
       - name: List dist directory contents for release
-        run: ls -l dist
+        run: ls -l
 
       # Generate a date-based tag name
       - name: Generate date-based tag name
@@ -70,6 +70,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.2.0
         with:
-          files: dist/extension.zip
+          files: extension.zip
           tag_name: ${{ env.TAG_NAME }}
           prerelease: ${{ github.ref == 'refs/heads/develop' }}  # Mark as prerelease if on the develop branch
