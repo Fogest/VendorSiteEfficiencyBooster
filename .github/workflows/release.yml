@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: extension
-          path: extension.zip
+          path: dist/extension.zip
 
   release:
     needs: build
@@ -66,6 +66,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.2.0
         with:
-          files: extension.zip
+          files: dist/extension.zip
           tag_name: ${{ env.TAG_NAME }}
           prerelease: ${{ github.ref == 'refs/heads/develop' }}  # Mark as prerelease if on the develop branch
