@@ -53,10 +53,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Generate a date-based tag name
+      - name: Generate date-based tag name
+        id: generate_tag
+        run: |
+          # Get the current date and time to ensure unique tags
+          TIMESTAMP=$(date +'%Y-%m-%d-%H%M%S')  # Format: YYYY-MM-DD-HHMMSS
+          TAG_NAME="release-${TIMESTAMP}"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+
       # Create a release using softprops/action-gh-release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.2.0
         with:
           files: dist/extension.zip
-          tag_name: ${{ github.sha }}  # Tag the release with the commit SHA or a custom tag
+          tag_name: ${{ env.TAG_NAME }}
           prerelease: ${{ github.ref == 'refs/heads/develop' }}  # Mark as prerelease if on the develop branch
