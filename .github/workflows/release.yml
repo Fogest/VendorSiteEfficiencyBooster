@@ -1,0 +1,73 @@
+name: Build and Release Extension
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # or your preferred Node.js version
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Build the extension
+      - name: Build the extension
+        run: npm run build
+
+      # Zip the build output
+      - name: Zip the extension
+        run: |
+          cd dist
+          zip -r ../extension.zip .
+
+      # Upload the ZIP as an artifact
+      - name: Upload extension ZIP
+        uses: actions/upload-artifact@v3
+        with:
+          name: extension
+          path: extension.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout code again for release creation
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up GitHub CLI
+      - name: Set up GitHub CLI
+        uses: cli/cli@v3
+
+      # Determine if the release is a pre-release based on the branch
+      - name: Create GitHub release
+        run: |
+          TAG_NAME=$(date +'%Y%m%d%H%M%S')
+          if [[ "${GITHUB_REF}" == "refs/heads/master" ]]; then
+            PRERELEASE=false
+          else
+            PRERELEASE=true
+          fi
+          
+          gh release create "$TAG_NAME" extension.zip \
+            --title "Release $TAG_NAME" \
+            --notes "Automated release for $TAG_NAME" \
+            --prerelease $PRERELEASE
