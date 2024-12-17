@@ -32,25 +32,15 @@
     // Create popup
     const popup: HTMLDivElement = document.createElement("div");
     popup.style.position = "fixed";
-    popup.style.top = "10%";
-    popup.style.left = "10%";
-    popup.style.width = "80%";
-    popup.style.height = "80%";
+    popup.style.top = "0%";
+    popup.style.left = "0%";
+    popup.style.width = "96%";
+    popup.style.height = "88%";
     popup.style.backgroundColor = "white";
     popup.style.border = "1px solid black";
     popup.style.zIndex = "10001";
     popup.style.overflow = "hidden";
     document.body.appendChild(popup);
-
-    // Add close button
-    const closeButton: HTMLButtonElement = document.createElement("button");
-    closeButton.textContent = "Close";
-    closeButton.style.position = "absolute";
-    closeButton.style.top = "10px";
-    closeButton.style.right = "10px";
-    popup.appendChild(closeButton);
-
-    closeButton.addEventListener("click", () => popup.remove());
 
     // Add image for editing
     const image: HTMLImageElement = new Image();
@@ -68,8 +58,8 @@
     image: HTMLImageElement
   ): void {
     const selectorBox: HTMLDivElement = document.createElement("div");
-    const boxWidth: number = 500;
-    const boxHeight: number = 250;
+    const boxWidth: number = 125;
+    const boxHeight: number = 62.5;
 
     selectorBox.style.position = "absolute";
     selectorBox.style.border = "2px dashed red";
@@ -113,7 +103,7 @@
     container.appendChild(saveButton);
 
     saveButton.addEventListener("click", () => {
-      saveCroppedImage(image, selectorBox, boxWidth, boxHeight);
+      saveCroppedImage(image, selectorBox, boxWidth, boxHeight, container);
     });
   }
 
@@ -121,7 +111,8 @@
     image: HTMLImageElement,
     selectorBox: HTMLDivElement,
     width: number,
-    height: number
+    height: number,
+    popupContainer: HTMLElement
   ): void {
     const canvas: HTMLCanvasElement = document.createElement("canvas");
     const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
@@ -154,5 +145,6 @@
     link.href = canvas.toDataURL("image/jpeg");
     link.download = "ir_patch.jpg";
     link.click();
+    popupContainer.remove();
   }
 })();
