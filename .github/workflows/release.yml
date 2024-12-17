@@ -56,7 +56,7 @@ jobs:
         
       # List dist directory contents again to verify the ZIP exists before release
       - name: List dist directory contents for release
-        run: ls -l dist
+        run: ls -l
 
         # Create a release using softprops/action-gh-release
       - name: Create GitHub Release
