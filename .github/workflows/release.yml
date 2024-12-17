@@ -22,7 +22,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # or your preferred Node.js version
+          node-version: '18'
 
       # Install dependencies
       - name: Install dependencies
@@ -38,31 +38,29 @@ jobs:
           cd dist
           zip -r ../extension.zip .
 
+      # Verify the ZIP file exists
+      - name: Verify ZIP file
+        run: ls -lh extension.zip
+
       # Upload the ZIP as an artifact
-      - name: Upload the dist folder
+      - name: Upload the ZIP as an artifact
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: dist
-          path: dist
+          name: extension
+          path: ./extension.zip
 
-        # Generate a date-based tag name
+      # Generate a date-based tag name
       - name: Generate date-based tag name
         id: generate_tag
         run: |
-          # Get the current date and time to ensure unique tags
-          TIMESTAMP=$(date +'%Y-%m-%d-%H%M%S')  # Format: YYYY-MM-DD-HHMMSS
+          TIMESTAMP=$(date +'%Y-%m-%d-%H%M%S')
           TAG_NAME="release-${TIMESTAMP}"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-        
-      # List dist directory contents again to verify the ZIP exists before release
-      - name: List dist directory contents for release
-        run: ls -l
 
-        # Create a release using softprops/action-gh-release
+      # Create GitHub Release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.2.0
         with:
-          files: '*.zip'
+          files: ./extension.zip
           tag_name: ${{ env.TAG_NAME }}
-          prerelease: ${{ github.ref == 'refs/heads/develop' }}  # Mark as prerelease if on the develop branch
-  
+          prerelease: ${{ github.ref == 'refs/heads/develop' }}
