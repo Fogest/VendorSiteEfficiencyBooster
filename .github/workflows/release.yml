@@ -55,7 +55,7 @@ jobs:
 
       # Set up GitHub CLI
       - name: Set up GitHub CLI
-        uses: actions/github-cli-action@v2
+        uses: cli/cli@v2
 
       # Determine if the release is a pre-release based on the branch
       - name: Create GitHub release
