@@ -57,17 +57,10 @@ jobs:
       - name: Set up GitHub CLI
         uses: cli/cli@v2
 
-      # Determine if the release is a pre-release based on the branch
-      - name: Create GitHub release
-        run: |
-          TAG_NAME=$(date +'%Y%m%d%H%M%S')
-          if [[ "${GITHUB_REF}" == "refs/heads/master" ]]; then
-            PRERELEASE=false
-          else
-            PRERELEASE=true
-          fi
-          
-          gh release create "$TAG_NAME" extension.zip \
-            --title "Release $TAG_NAME" \
-            --notes "Automated release for $TAG_NAME" \
-            --prerelease $PRERELEASE
+      # Create a release using softprops/action-gh-release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2.2.0
+        with:
+          files: dist/extension.zip
+          tag_name: ${{ github.sha }}  # Tag the release with the commit SHA or a custom tag
+          prerelease: ${{ github.ref == 'refs/heads/develop' }}  # Mark as prerelease if on the develop branch
