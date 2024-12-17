@@ -39,25 +39,13 @@ jobs:
           zip -r ../extension.zip .
 
       # Upload the ZIP as an artifact
-      - name: Upload extension ZIP
+      - name: Upload the dist folder
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: extension
-          path: extension.zip
+          name: dist
+          path: dist
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      # Checkout code again for release creation
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # List dist directory contents again to verify the ZIP exists before release
-      - name: List dist directory contents for release
-        run: ls -l
-
-      # Generate a date-based tag name
+        # Generate a date-based tag name
       - name: Generate date-based tag name
         id: generate_tag
         run: |
@@ -66,10 +54,11 @@ jobs:
           TAG_NAME="release-${TIMESTAMP}"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
 
-      # Create a release using softprops/action-gh-release
+        # Create a release using softprops/action-gh-release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.2.0
         with:
           files: extension.zip
           tag_name: ${{ env.TAG_NAME }}
           prerelease: ${{ github.ref == 'refs/heads/develop' }}  # Mark as prerelease if on the develop branch
+  
