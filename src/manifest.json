@@ -4,26 +4,27 @@
 	"version": "1.0",
 	"description": "A Chrome extension for http://example.com",
 	"permissions": [
-		"activeTab"
+		"activeTab",
+		"scripting"
 	],
 	"host_permissions": [
-		"http://example.com/*"
+		"https://waterlooqa.desktop.capreview.empro.verintcloudservices.com/*",
+		"https://waterlooqa.form.capreview.empro.verintcloudservices.com/*"
 	],
-	"background": {
-		"service_worker": "background.js"
-	},
 	"content_scripts": [
 		{
 			"matches": [
-				"http://example.com/*"
+				"https://waterlooqa.form.capreview.empro.verintcloudservices.com/*"
 			],
 			"js": [
 				"content.js"
-			]
+			],
+			"all_frames": true
 		}
 	],
 	"action": {
 		"default_popup": "popup.html",
+		"default_title": "Enlarge License Plate",
 		"default_icon": {
 			"16": "public/icon.png",
 			"48": "public/icon.png",
@@ -34,5 +35,9 @@
 		"16": "public/icon.png",
 		"48": "public/icon.png",
 		"128": "public/icon.png"
+	},
+	"content_security_policy": {
+		"extension_pages": "script-src 'self'; object-src 'self';",
+		"sandbox": "sandbox allow-scripts; script-src 'self';"
 	}
 }

@@ -1,21 +1,158 @@
-// content.ts
-function readInfoFromPage() {
-  // Implementation to read info from the page
-  return "Page info placeholder";
-}
+(function () {
+  // Create a floating button
+  const button: HTMLButtonElement = document.createElement("button");
+  button.textContent = "Open Image Editor";
+  button.style.position = "fixed";
+  button.style.bottom = "20px";
+  button.style.right = "20px";
+  button.style.padding = "10px 15px";
+  button.style.backgroundColor = "#007BFF";
+  button.style.color = "white";
+  button.style.border = "none";
+  button.style.borderRadius = "5px";
+  button.style.zIndex = "10000";
+  button.style.cursor = "pointer";
 
-function modifyPage() {
-  // Implementation to modify/inject elements
-  console.log("Page modified");
-}
+  document.body.appendChild(button);
 
-// Listen for messages from the background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "readInfo") {
-    const info = readInfoFromPage();
-    sendResponse({ info });
-  } else if (message.action === "modifyPage") {
-    modifyPage();
-    sendResponse({ success: true });
+  button.addEventListener("click", () => {
+    const img: HTMLImageElement | null = document.querySelector(
+      "#dform_widget_html_ahtm_ase_camera_incident_images > p > img"
+    );
+
+    if (!img) {
+      alert("No image found.");
+      return;
+    }
+
+    openImageEditor(img.src);
+  });
+
+  function openImageEditor(imageUrl: string): void {
+    // Create popup
+    const popup: HTMLDivElement = document.createElement("div");
+    popup.style.position = "fixed";
+    popup.style.top = "10%";
+    popup.style.left = "10%";
+    popup.style.width = "80%";
+    popup.style.height = "80%";
+    popup.style.backgroundColor = "white";
+    popup.style.border = "1px solid black";
+    popup.style.zIndex = "10001";
+    popup.style.overflow = "hidden";
+    document.body.appendChild(popup);
+
+    // Add close button
+    const closeButton: HTMLButtonElement = document.createElement("button");
+    closeButton.textContent = "Close";
+    closeButton.style.position = "absolute";
+    closeButton.style.top = "10px";
+    closeButton.style.right = "10px";
+    popup.appendChild(closeButton);
+
+    closeButton.addEventListener("click", () => popup.remove());
+
+    // Add image for editing
+    const image: HTMLImageElement = new Image();
+    image.src = imageUrl;
+    image.style.position = "relative";
+    image.style.maxWidth = "100%";
+    image.style.maxHeight = "100%";
+    popup.appendChild(image);
+
+    addSelectionBox(popup, image);
   }
-});
+
+  function addSelectionBox(
+    container: HTMLElement,
+    image: HTMLImageElement
+  ): void {
+    const selectorBox: HTMLDivElement = document.createElement("div");
+    const boxWidth: number = 500;
+    const boxHeight: number = 250;
+
+    selectorBox.style.position = "absolute";
+    selectorBox.style.border = "2px dashed red";
+    selectorBox.style.width = `${boxWidth}px`;
+    selectorBox.style.height = `${boxHeight}px`;
+    selectorBox.style.cursor = "move";
+    selectorBox.style.top = "10px";
+    selectorBox.style.left = "10px";
+    container.appendChild(selectorBox);
+
+    let startX: number = 0,
+      startY: number = 0;
+
+    selectorBox.addEventListener("mousedown", (e: MouseEvent) => {
+      startX = e.clientX - selectorBox.offsetLeft;
+      startY = e.clientY - selectorBox.offsetTop;
+
+      const onMouseMove = (e: MouseEvent) => {
+        const x: number = Math.max(0, e.clientX - startX);
+        const y: number = Math.max(0, e.clientY - startY);
+
+        selectorBox.style.left = `${x}px`;
+        selectorBox.style.top = `${y}px`;
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      };
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    });
+
+    // Add save button
+    const saveButton: HTMLButtonElement = document.createElement("button");
+    saveButton.textContent = "Save Selection";
+    saveButton.style.position = "absolute";
+    saveButton.style.bottom = "10px";
+    saveButton.style.left = "10px";
+    container.appendChild(saveButton);
+
+    saveButton.addEventListener("click", () => {
+      saveCroppedImage(image, selectorBox, boxWidth, boxHeight);
+    });
+  }
+
+  function saveCroppedImage(
+    image: HTMLImageElement,
+    selectorBox: HTMLDivElement,
+    width: number,
+    height: number
+  ): void {
+    const canvas: HTMLCanvasElement = document.createElement("canvas");
+    const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
+
+    if (!ctx) {
+      console.error("Unable to get canvas context");
+      return;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const scale: number = image.naturalWidth / image.width;
+    const boxX: number = parseInt(selectorBox.style.left) * scale;
+    const boxY: number = parseInt(selectorBox.style.top) * scale;
+
+    ctx.drawImage(
+      image,
+      boxX,
+      boxY,
+      width * scale,
+      height * scale,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    const link: HTMLAnchorElement = document.createElement("a");
+    link.href = canvas.toDataURL("image/jpeg");
+    link.download = "ir_patch.jpg";
+    link.click();
+  }
+})();
