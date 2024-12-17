@@ -35,7 +35,7 @@
     popup.style.top = "0%";
     popup.style.left = "0%";
     popup.style.width = "96%";
-    popup.style.height = "88%";
+    popup.style.height = "98%";
     popup.style.backgroundColor = "white";
     popup.style.border = "1px solid black";
     popup.style.zIndex = "10001";
@@ -107,13 +107,13 @@
     });
   }
 
-  function saveCroppedImage(
+  async function saveCroppedImage(
     image: HTMLImageElement,
     selectorBox: HTMLDivElement,
     width: number,
     height: number,
     popupContainer: HTMLElement
-  ): void {
+  ): Promise<void> {
     const canvas: HTMLCanvasElement = document.createElement("canvas");
     const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
 
@@ -122,8 +122,8 @@
       return;
     }
 
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = 500;
+    canvas.height = 250;
 
     const scale: number = image.naturalWidth / image.width;
     const boxX: number = parseInt(selectorBox.style.left) * scale;
@@ -137,8 +137,12 @@
       height * scale,
       0,
       0,
-      canvas.width,
-      canvas.height
+      500,
+      250
+    );
+
+    const blob: Blob = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b!), "image/jpeg")
     );
 
     const link: HTMLAnchorElement = document.createElement("a");
