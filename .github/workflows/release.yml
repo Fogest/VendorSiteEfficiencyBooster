@@ -59,8 +59,10 @@ jobs:
 
       # Create GitHub Release
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2.2.0
+        uses: softprops/action-gh-release@v2
         with:
           files: ./extension.zip
           tag_name: ${{ env.TAG_NAME }}
           prerelease: ${{ github.ref == 'refs/heads/develop' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
