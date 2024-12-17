@@ -53,6 +53,10 @@ jobs:
           TIMESTAMP=$(date +'%Y-%m-%d-%H%M%S')  # Format: YYYY-MM-DD-HHMMSS
           TAG_NAME="release-${TIMESTAMP}"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+        
+      # List dist directory contents again to verify the ZIP exists before release
+      - name: List dist directory contents for release
+        run: ls -l dist
 
         # Create a release using softprops/action-gh-release
       - name: Create GitHub Release
