@@ -58,8 +58,8 @@
     image: HTMLImageElement
   ): void {
     const selectorBox: HTMLDivElement = document.createElement("div");
-    const boxWidth: number = 125;
-    const boxHeight: number = 62.5;
+    const boxWidth: number = 100;
+    const boxHeight: number = 50;
 
     selectorBox.style.position = "absolute";
     selectorBox.style.border = "2px dashed red";
@@ -122,8 +122,8 @@
       return;
     }
 
-    canvas.width = 500;
-    canvas.height = 250;
+    canvas.width = 250;
+    canvas.height = 125;
 
     const scale: number = image.naturalWidth / image.width;
     const boxX: number = parseInt(selectorBox.style.left) * scale;
@@ -137,8 +137,8 @@
       height * scale,
       0,
       0,
-      500,
-      250
+      250,
+      125
     );
 
     const blob: Blob = await new Promise((resolve) =>
