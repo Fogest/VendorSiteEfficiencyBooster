@@ -14,8 +14,8 @@
   button.style.cursor = "pointer";
 
   let selectorBox = document.createElement("div");
-  const boxWidth: number = 100;
-  const boxHeight: number = 50;
+  const boxWidth: number = 250;
+  const boxHeight: number = 125;
 
   document.body.appendChild(button);
 
