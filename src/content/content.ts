@@ -20,15 +20,33 @@
       "#dform_widget_html_ahtm_ase_camera_incident_images > p > img"
     );
 
+    // Get reference number from the page to use in direct URL for IR image
+    const refNumber = document.querySelector(
+      "#dform_ref_display > span"
+    )?.textContent;
+
+    // Load IR Image from the server (Direct URL)
+    const irImgSrc =
+      "https://waterlooqa.form.capreview.empro.verintcloudservices.com/api/private/getfile?ref=" +
+      refNumber +
+      "&filename=ir.jpg";
+
     if (!img) {
       alert("No image found.");
       return;
     }
 
-    openImageEditor(img.src);
+    alert(irImgSrc);
+
+    if (!irImgSrc) {
+      alert("No IR image found.");
+      return;
+    }
+
+    openImageEditor(img.src, irImgSrc);
   });
 
-  function openImageEditor(imageUrl: string): void {
+  function openImageEditor(imageUrl: string, irImageUrl: string): void {
     // Create popup
     const popup: HTMLDivElement = document.createElement("div");
     popup.style.position = "fixed";
@@ -39,23 +57,54 @@
     popup.style.backgroundColor = "white";
     popup.style.border = "1px solid black";
     popup.style.zIndex = "10001";
-    popup.style.overflow = "hidden";
+    popup.style.overflow = "auto";
     document.body.appendChild(popup);
+
+    // Add toggle button
+    const toggleButton: HTMLButtonElement = document.createElement("button");
+    toggleButton.textContent = "Switch Image";
+    toggleButton.style.position = "absolute";
+    toggleButton.style.top = "10px";
+    toggleButton.style.left = "10px";
+    toggleButton.style.zIndex = "10002";
+    popup.appendChild(toggleButton);
 
     // Add image for editing
     const image: HTMLImageElement = new Image();
     image.src = imageUrl;
     image.style.position = "relative";
-    image.style.maxWidth = "100%";
-    image.style.maxHeight = "100%";
+    image.style.display = "block";
+    image.style.margin = "0 auto";
     popup.appendChild(image);
 
-    addSelectionBox(popup, image);
+    // Add IR image for editing
+    const irImage: HTMLImageElement = new Image();
+    irImage.src = irImageUrl;
+    irImage.style.position = "relative";
+    irImage.style.display = "none";
+    irImage.style.margin = "0 auto";
+    popup.appendChild(irImage);
+
+    let currentImage = image;
+
+    toggleButton.addEventListener("click", () => {
+      if (currentImage === image) {
+        image.style.display = "none";
+        irImage.style.display = "block";
+        currentImage = irImage;
+      } else {
+        irImage.style.display = "none";
+        image.style.display = "block";
+        currentImage = image;
+      }
+    });
+
+    addSelectionBox(popup, () => currentImage);
   }
 
   function addSelectionBox(
     container: HTMLElement,
-    image: HTMLImageElement
+    getCurrentImage: () => HTMLImageElement
   ): void {
     const selectorBox: HTMLDivElement = document.createElement("div");
     const boxWidth: number = 100;
@@ -103,7 +152,14 @@
     container.appendChild(saveButton);
 
     saveButton.addEventListener("click", () => {
-      saveCroppedImage(image, selectorBox, boxWidth, boxHeight, container);
+      const currentImage = getCurrentImage();
+      saveCroppedImage(
+        currentImage,
+        selectorBox,
+        boxWidth,
+        boxHeight,
+        container
+      );
     });
   }
 
