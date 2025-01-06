@@ -40,8 +40,6 @@
       return;
     }
 
-    alert(irImgSrc);
-
     if (!irImgSrc) {
       alert("No IR image found.");
       return;
