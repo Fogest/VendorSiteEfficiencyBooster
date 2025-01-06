@@ -115,9 +115,31 @@
     selectorBox.style.width = `${boxWidth}px`;
     selectorBox.style.height = `${boxHeight}px`;
     selectorBox.style.cursor = "move";
-    selectorBox.style.top = "10px";
-    selectorBox.style.left = "10px";
     container.appendChild(selectorBox);
+
+    const onMouseMove = (e: MouseEvent) => {
+      const x: number = Math.max(
+        0,
+        e.clientX - boxWidth / 2 + container.scrollLeft
+      );
+      const y: number = Math.max(
+        0,
+        e.clientY - boxHeight / 2 + container.scrollTop
+      );
+
+      selectorBox.style.left = `${x}px`;
+      selectorBox.style.top = `${y}px`;
+    };
+
+    container.addEventListener("mousemove", onMouseMove);
+
+    container.addEventListener(
+      "click",
+      () => {
+        container.removeEventListener("mousemove", onMouseMove);
+      },
+      { once: true }
+    );
 
     let startX: number = 0,
       startY: number = 0;
@@ -127,8 +149,11 @@
       startY = e.clientY - selectorBox.offsetTop;
 
       const onMouseMove = (e: MouseEvent) => {
-        const x: number = Math.max(0, e.clientX - startX);
-        const y: number = Math.max(0, e.clientY - startY);
+        const x: number = Math.max(
+          0,
+          e.clientX - startX + container.scrollLeft
+        );
+        const y: number = Math.max(0, e.clientY - startY + container.scrollTop);
 
         selectorBox.style.left = `${x}px`;
         selectorBox.style.top = `${y}px`;
