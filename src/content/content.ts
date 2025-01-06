@@ -13,6 +13,10 @@
   button.style.zIndex = "10000";
   button.style.cursor = "pointer";
 
+  let selectorBox = document.createElement("div");
+  const boxWidth: number = 100;
+  const boxHeight: number = 50;
+
   document.body.appendChild(button);
 
   button.addEventListener("click", () => {
@@ -87,6 +91,24 @@
 
     let currentImage = image;
 
+    const onMouseMove = (e: MouseEvent) => {
+      const x: number = Math.max(
+        0,
+        e.clientX - boxWidth / 2 + popup.scrollLeft
+      );
+      const y: number = Math.max(
+        0,
+        e.clientY - boxHeight / 2 + popup.scrollTop
+      );
+
+      selectorBox.style.left = `${x}px`;
+      selectorBox.style.top = `${y}px`;
+    };
+
+    function attachMouseMoveListener() {
+      popup.addEventListener("mousemove", onMouseMove);
+    }
+
     toggleButton.addEventListener("click", () => {
       if (currentImage === image) {
         image.style.display = "none";
@@ -97,6 +119,7 @@
         image.style.display = "block";
         currentImage = image;
       }
+      attachMouseMoveListener();
     });
 
     addSelectionBox(popup, () => currentImage);
@@ -106,9 +129,7 @@
     container: HTMLElement,
     getCurrentImage: () => HTMLImageElement
   ): void {
-    const selectorBox: HTMLDivElement = document.createElement("div");
-    const boxWidth: number = 100;
-    const boxHeight: number = 50;
+    selectorBox = document.createElement("div");
 
     selectorBox.style.position = "absolute";
     selectorBox.style.border = "2px dashed red";
@@ -131,7 +152,11 @@
       selectorBox.style.top = `${y}px`;
     };
 
-    container.addEventListener("mousemove", onMouseMove);
+    function attachMouseMoveListener() {
+      container.addEventListener("mousemove", onMouseMove);
+    }
+
+    attachMouseMoveListener();
 
     container.addEventListener(
       "click",
