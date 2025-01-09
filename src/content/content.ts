@@ -141,7 +141,8 @@
     // Center the horizontal scrollbar
     setTimeout(() => {
       popup.scrollLeft = (popup.scrollWidth - popup.clientWidth) / 2 + 150;
-    }, 100);
+      popup.scrollTop = (popup.scrollHeight - popup.clientHeight) / 2 + 150;
+    }, 200);
 
     let currentImage = image;
 
