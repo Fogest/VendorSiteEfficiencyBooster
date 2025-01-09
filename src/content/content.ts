@@ -130,6 +130,11 @@
     irImage.style.margin = "0 auto";
     popup.appendChild(irImage);
 
+    // Center the horizontal scrollbar
+    setTimeout(() => {
+      popup.scrollLeft = (popup.scrollWidth - popup.clientWidth) / 2 + 150;
+    }, 100);
+
     let currentImage = image;
 
     const onMouseMove = (e: MouseEvent) => {
