@@ -14,8 +14,10 @@
   button.style.cursor = "pointer";
 
   let selectorBox = document.createElement("div");
-  const boxWidth: number = 250;
-  const boxHeight: number = 125;
+  const boxWidth: number = 280;
+  const boxHeight: number = 160;
+
+  let isMouseFollowEnabled = true;
 
   document.body.appendChild(button);
 
@@ -90,6 +92,7 @@
     let currentImage = image;
 
     const onMouseMove = (e: MouseEvent) => {
+      if (!isMouseFollowEnabled) return;
       const x: number = Math.max(
         0,
         e.clientX - boxWidth / 2 + popup.scrollLeft
@@ -160,6 +163,7 @@
       "click",
       () => {
         container.removeEventListener("mousemove", onMouseMove);
+        isMouseFollowEnabled = false;
       },
       { once: true }
     );
@@ -226,8 +230,8 @@
       return;
     }
 
-    canvas.width = 250;
-    canvas.height = 125;
+    canvas.width = 280;
+    canvas.height = 160;
 
     const scale: number = image.naturalWidth / image.width;
     const boxX: number = parseInt(selectorBox.style.left) * scale;
@@ -241,8 +245,8 @@
       height * scale,
       0,
       0,
-      250,
-      125
+      280,
+      160
     );
 
     const blob: Blob = await new Promise((resolve) =>
