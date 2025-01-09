@@ -19,6 +19,8 @@
 
   let isMouseFollowEnabled = true;
 
+  let toggleButton: HTMLButtonElement;
+
   document.body.appendChild(button);
 
   button.addEventListener("click", () => {
@@ -50,6 +52,45 @@
     openImageEditor(img.src, irImgSrc);
   });
 
+  function enableMouseFollow(
+    container: HTMLElement,
+    getCurrentImage: () => HTMLImageElement
+  ) {
+    isMouseFollowEnabled = true;
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isMouseFollowEnabled) return;
+
+      const x: number = Math.max(
+        0,
+        e.clientX - boxWidth / 2 + container.scrollLeft
+      );
+      const y: number = Math.max(
+        0,
+        e.clientY - boxHeight / 2 + container.scrollTop
+      );
+
+      selectorBox.style.left = `${x}px`;
+      selectorBox.style.top = `${y}px`;
+    };
+
+    const stopMouseFollow = (e: MouseEvent) => {
+      const currentImage = getCurrentImage(); // Retrieve the current image dynamically
+
+      // Ignore clicks on the toggle button or the current image
+      if (e.target === toggleButton || e.target === currentImage) return;
+
+      container.removeEventListener("mousemove", onMouseMove);
+      isMouseFollowEnabled = false;
+
+      // Remove this click listener
+      container.removeEventListener("click", stopMouseFollow);
+    };
+
+    container.addEventListener("mousemove", onMouseMove);
+    container.addEventListener("click", stopMouseFollow);
+  }
+
   function openImageEditor(imageUrl: string, irImageUrl: string): void {
     // Create popup
     const popup: HTMLDivElement = document.createElement("div");
@@ -65,7 +106,7 @@
     document.body.appendChild(popup);
 
     // Add toggle button
-    const toggleButton: HTMLButtonElement = document.createElement("button");
+    toggleButton = document.createElement("button");
     toggleButton.textContent = "Switch Image";
     toggleButton.style.position = "absolute";
     toggleButton.style.top = "10px";
@@ -106,11 +147,10 @@
       selectorBox.style.top = `${y}px`;
     };
 
-    function attachMouseMoveListener() {
-      popup.addEventListener("mousemove", onMouseMove);
-    }
+    toggleButton.addEventListener("click", (e: MouseEvent) => {
+      // Prevent the click from propagating to the popup container
+      e.stopPropagation();
 
-    toggleButton.addEventListener("click", () => {
       if (currentImage === image) {
         image.style.display = "none";
         irImage.style.display = "block";
@@ -120,7 +160,11 @@
         image.style.display = "block";
         currentImage = image;
       }
-      attachMouseMoveListener();
+
+      // Re-enable mouse-follow after toggling images
+      if (!isMouseFollowEnabled) {
+        enableMouseFollow(popup, () => currentImage);
+      }
     });
 
     addSelectionBox(popup, () => currentImage);
@@ -161,7 +205,10 @@
 
     container.addEventListener(
       "click",
-      () => {
+      (e) => {
+        // Prevent stopping mouse-follow if the click is on the toggle button
+        if (e.target === toggleButton) return;
+
         container.removeEventListener("mousemove", onMouseMove);
         isMouseFollowEnabled = false;
       },
