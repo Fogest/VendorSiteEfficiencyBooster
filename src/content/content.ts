@@ -108,10 +108,18 @@
     // Add toggle button
     toggleButton = document.createElement("button");
     toggleButton.textContent = "Switch Image";
-    toggleButton.style.position = "absolute";
+    toggleButton.style.position = "fixed";
     toggleButton.style.top = "10px";
     toggleButton.style.left = "10px";
     toggleButton.style.zIndex = "10002";
+
+    toggleButton.style.padding = "10px 15px";
+    toggleButton.style.backgroundColor = "#007BFF";
+    toggleButton.style.color = "white";
+    toggleButton.style.border = "none";
+    toggleButton.style.borderRadius = "5px";
+    toggleButton.style.cursor = "pointer";
+
     popup.appendChild(toggleButton);
 
     // Add image for editing
@@ -250,9 +258,18 @@
     // Add save button
     const saveButton: HTMLButtonElement = document.createElement("button");
     saveButton.textContent = "Save Selection";
-    saveButton.style.position = "absolute";
-    saveButton.style.bottom = "10px";
+    saveButton.style.position = "fixed";
+    saveButton.style.top = "60px";
     saveButton.style.left = "10px";
+    saveButton.style.zIndex = "10003";
+
+    saveButton.style.padding = "10px 15px";
+    saveButton.style.backgroundColor = "rgb(64 149 0)";
+    saveButton.style.color = "white";
+    saveButton.style.border = "none";
+    saveButton.style.borderRadius = "5px";
+    saveButton.style.cursor = "pointer";
+
     container.appendChild(saveButton);
 
     saveButton.addEventListener("click", () => {
