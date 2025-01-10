@@ -24,14 +24,20 @@
   document.body.appendChild(button);
 
   button.addEventListener("click", () => {
-    const img: HTMLImageElement | null = document.querySelector(
-      "#dform_widget_html_ahtm_ase_camera_incident_images > p > img"
-    );
+    // Old method of getting image, now direct to the source
+    // const img: HTMLImageElement | null = document.querySelector(
+    //   "#dform_widget_html_ahtm_ase_camera_incident_images > p > img"
+    // );
 
-    // Get reference number from the page to use in direct URL for IR image
+    // Get reference number from the page to use in direct URL for image src's
     const refNumber = document.querySelector(
       "#dform_ref_display > span"
     )?.textContent;
+
+    const contextOneImageSrc =
+      "https://waterlooqa.form.capreview.empro.verintcloudservices.com/api/private/getfile?ref=" +
+      refNumber +
+      "&filename=context_1.jpg";
 
     // Load IR Image from the server (Direct URL)
     const irImgSrc =
@@ -39,8 +45,8 @@
       refNumber +
       "&filename=ir.jpg";
 
-    if (!img) {
-      alert("No image found.");
+    if (!contextOneImageSrc) {
+      alert("No context_1 image found.");
       return;
     }
 
@@ -49,7 +55,7 @@
       return;
     }
 
-    openImageEditor(img.src, irImgSrc);
+    openImageEditor(contextOneImageSrc, irImgSrc);
   });
 
   function enableMouseFollow(
@@ -142,7 +148,7 @@
     setTimeout(() => {
       popup.scrollLeft = (popup.scrollWidth - popup.clientWidth) / 2 + 150;
       popup.scrollTop = (popup.scrollHeight - popup.clientHeight) / 2 + 175;
-    }, 200);
+    }, 250);
 
     let currentImage = image;
 
