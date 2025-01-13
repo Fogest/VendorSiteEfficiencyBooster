@@ -1,17 +1,51 @@
 (function () {
-  // Create a floating button
+  // Create a floating DIV to hold multiple buttons
+  const buttonContainer: HTMLDivElement = document.createElement("div");
+  buttonContainer.style.position = "fixed";
+  buttonContainer.style.bottom = "20px";
+  buttonContainer.style.right = "20px";
+  buttonContainer.style.zIndex = "10000";
+  document.body.appendChild(buttonContainer);
+
+  // Create a button to Open Image Editor
   const button: HTMLButtonElement = document.createElement("button");
   button.textContent = "Open Image Editor";
-  button.style.position = "fixed";
-  button.style.bottom = "20px";
-  button.style.right = "20px";
+  button.style.marginLeft = "2px";
   button.style.padding = "10px 15px";
   button.style.backgroundColor = "#007BFF";
   button.style.color = "white";
   button.style.border = "none";
   button.style.borderRadius = "5px";
-  button.style.zIndex = "10000";
   button.style.cursor = "pointer";
+
+  buttonContainer.appendChild(button);
+
+  // Create a button for "Good" image
+  const goodButton: HTMLButtonElement = document.createElement("button");
+  goodButton.textContent = "Good";
+  goodButton.style.padding = "10px 15px";
+  goodButton.style.backgroundColor = "#28a745";
+  goodButton.style.color = "white";
+  goodButton.style.border = "none";
+  goodButton.style.borderRadius = "5px";
+  goodButton.style.cursor = "pointer";
+
+  // Insert before the Open Image Editor button
+  buttonContainer.insertBefore(goodButton, button);
+
+  // Create a button for "Good" image that is missing good enlargment ("Partial")
+  const partialButton: HTMLButtonElement = document.createElement("button");
+  partialButton.textContent = "Partial";
+  partialButton.style.marginLeft = "2px";
+  partialButton.style.padding = "10px 15px";
+  partialButton.style.backgroundColor = "#ffc107";
+  partialButton.style.color = "black";
+  partialButton.style.border = "none";
+  partialButton.style.borderRadius = "5px";
+  partialButton.style.cursor = "pointer";
+
+  // Insert before the Open Image Editor button
+  buttonContainer.insertBefore(partialButton, button);
 
   let selectorBox = document.createElement("div");
   const boxWidth: number = 280;
@@ -21,7 +55,27 @@
 
   let toggleButton: HTMLButtonElement;
 
-  document.body.appendChild(button);
+  // const context1ImageSelector =
+  //   "#dform_widget_html_ahtm_ase_camera_incident_images > p > img";
+
+  // // Every time a new iframe loads into the page, we need to look for the context1 image being loaded in
+  // // Actions will be taken once it is found in a new iframe
+  // // The image may not be immediately available when the iframe loads, so we need to wait for it to load
+  // // before we can take actions on it. The page will not refresh before next time it is needed again, but
+  // // new iframes with the image will be loaded in again. So we have to monitor for the image to be loaded
+  // // in each iframe.
+  // const observer = new MutationObserver((mutationsList, observer) => {
+  //   for (const mutation of mutationsList) {
+  //     if (mutation.type === "childList") {
+  //       const context1Image = document.querySelector(context1ImageSelector);
+  //       if (context1Image) {
+  //         // Enable the button
+  //         alert("found image");
+  //         observer.disconnect();
+  //       }
+  //     }
+  //   }
+  // });
 
   button.addEventListener("click", () => {
     // Old method of getting image, now direct to the source
@@ -57,6 +111,88 @@
 
     openImageEditor(contextOneImageSrc, irImgSrc);
   });
+
+  goodButton.addEventListener("click", () => {
+    formAutoComplete();
+  });
+
+  partialButton.addEventListener("click", () => {
+    formAutoComplete(true, true, true, true, false, true, 1);
+  });
+
+  function formAutoComplete(
+    exceededSpeed: boolean = true,
+    vehicleMarkerPresent: boolean = true,
+    markerCorrectLane: boolean = true,
+    licensePlateClear: boolean = true,
+    enlargementCorrectClear: boolean = true,
+    locationDataBoxMatch: boolean = true,
+    imageCodeNameValue: number = 1
+  ) {
+    autoCompleteYesOrNo(
+      "#dform_widget_ase_rad_ase_camera_incident_exceeded_speed",
+      exceededSpeed
+    );
+    autoCompleteYesOrNo(
+      "#dform_widget_ase_rad_ase_camera_vehicle_marker_present",
+      vehicleMarkerPresent
+    );
+    autoCompleteYesOrNo(
+      "#dform_widget_ase_rad_ase_camera_marker_correct_lane",
+      markerCorrectLane
+    );
+    autoCompleteYesOrNo(
+      "#dform_widget_ase_rad_ase_camera_license_plate_clear",
+      licensePlateClear
+    );
+    autoCompleteYesOrNo(
+      "#dform_widget_ase_rad_ase_camera_license_plate_correct_clear",
+      enlargementCorrectClear,
+      !enlargementCorrectClear
+    );
+    autoCompleteYesOrNo(
+      "#dform_widget_ase_rad_ase_camera_location_data_box_match_site_info",
+      locationDataBoxMatch
+    );
+
+    // Set Image Code Name selector to the value 1 option
+    const imageCodeNameSelector = document.querySelector(
+      "#dform_widget_ase_sel_ase_camera_image_code_name"
+    ) as HTMLSelectElement;
+
+    if (imageCodeNameSelector) {
+      imageCodeNameSelector.selectedIndex = imageCodeNameValue;
+    }
+  }
+
+  function autoCompleteYesOrNo(
+    baseSelector: string,
+    value: boolean = true,
+    triggerEnlargementReupload: boolean = false
+  ): void {
+    const selector = value ? baseSelector + "1" : baseSelector + "2";
+    const buttonToCheckOff = document.querySelector(
+      selector
+    ) as HTMLInputElement;
+
+    // Trigger a click on the input element to check it off
+    if (buttonToCheckOff) {
+      buttonToCheckOff.click();
+
+      // Wait 150 ms before triggering the re-upload button if needed
+      if (triggerEnlargementReupload) {
+        setTimeout(() => {
+          const reuploadButton = document.querySelector(
+            "#dform_widget_file_po_camera_upload_photo"
+          ) as HTMLButtonElement;
+
+          if (reuploadButton) {
+            reuploadButton.click();
+          }
+        }, 100);
+      }
+    }
+  }
 
   function enableMouseFollow(
     container: HTMLElement,
