@@ -1,11 +1,12 @@
 {
 	"manifest_version": 3,
 	"name": "CMPro Efficiency Booster",
-	"version": "1.2",
+	"version": "1.2.1",
 	"description": "An extension for an internal site",
 	"permissions": [
 		"activeTab",
-		"scripting"
+		"scripting",
+		"downloads"
 	],
 	"host_permissions": [
 		"https://waterlooqa.desktop.capreview.empro.verintcloudservices.com/*",
@@ -22,6 +23,9 @@
 			"all_frames": true
 		}
 	],
+	"background": {
+		"service_worker": "background.js"
+	},
 	"action": {
 		"default_popup": "popup.html",
 		"default_title": "Enlarge License Plate",
