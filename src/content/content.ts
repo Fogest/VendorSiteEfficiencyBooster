@@ -264,6 +264,26 @@
 
     popup.appendChild(toggleButton);
 
+    const closeButton: HTMLButtonElement = document.createElement("button");
+    closeButton.textContent = "Close";
+    closeButton.style.position = "fixed";
+    closeButton.style.top = "10px";
+    closeButton.style.right = "6%";
+    closeButton.style.zIndex = "10002";
+
+    closeButton.style.padding = "10px 15px";
+    closeButton.style.backgroundColor = "red";
+    closeButton.style.color = "white";
+    closeButton.style.border = "none";
+    closeButton.style.borderRadius = "5px";
+    closeButton.style.cursor = "pointer";
+
+    popup.appendChild(closeButton);
+
+    closeButton.addEventListener("click", () => {
+      popup.remove();
+    });
+
     // Add image for editing
     const image: HTMLImageElement = new Image();
     image.src = imageUrl;
