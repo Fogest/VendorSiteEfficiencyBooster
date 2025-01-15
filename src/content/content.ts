@@ -55,28 +55,6 @@
 
   let toggleButton: HTMLButtonElement;
 
-  // const context1ImageSelector =
-  //   "#dform_widget_html_ahtm_ase_camera_incident_images > p > img";
-
-  // // Every time a new iframe loads into the page, we need to look for the context1 image being loaded in
-  // // Actions will be taken once it is found in a new iframe
-  // // The image may not be immediately available when the iframe loads, so we need to wait for it to load
-  // // before we can take actions on it. The page will not refresh before next time it is needed again, but
-  // // new iframes with the image will be loaded in again. So we have to monitor for the image to be loaded
-  // // in each iframe.
-  // const observer = new MutationObserver((mutationsList, observer) => {
-  //   for (const mutation of mutationsList) {
-  //     if (mutation.type === "childList") {
-  //       const context1Image = document.querySelector(context1ImageSelector);
-  //       if (context1Image) {
-  //         // Enable the button
-  //         alert("found image");
-  //         observer.disconnect();
-  //       }
-  //     }
-  //   }
-  // });
-
   button.addEventListener("click", () => {
     // Old method of getting image, now direct to the source
     // const img: HTMLImageElement | null = document.querySelector(
