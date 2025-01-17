@@ -7,7 +7,6 @@ module.exports = {
   entry: {
     background: "./src/background/background.ts",
     content: "./src/content/content.ts",
-    popup: "./src/popup/popup.ts",
   },
   module: {
     rules: [
@@ -29,8 +28,6 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         { from: "src/manifest.json", to: "manifest.json" },
-        { from: "src/popup/popup.html", to: "popup.html" },
-        { from: "src/popup/popup.css", to: "popup.css" },
         { from: "public", to: "public" },
       ],
     }),

@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
-	"name": "CMPro Efficiency Booster",
-	"version": "1.2.2",
+	"name": "Vendor Site Efficiency Booster",
+	"version": "1.2.3",
 	"description": "An extension for an internal site",
 	"permissions": [
 		"activeTab",
@@ -10,12 +10,15 @@
 	],
 	"host_permissions": [
 		"https://waterlooqa.desktop.capreview.empro.verintcloudservices.com/*",
-		"https://waterlooqa.form.capreview.empro.verintcloudservices.com/*"
+		"https://waterlooqa.form.capreview.empro.verintcloudservices.com/*",
+		"https://waterloo.home.ca.empro.verintcloudservices.com/*",
+		"https://waterloo.form.ca.empro.verintcloudservices.com/*"
 	],
 	"content_scripts": [
 		{
 			"matches": [
-				"https://waterlooqa.form.capreview.empro.verintcloudservices.com/*"
+				"https://waterlooqa.form.capreview.empro.verintcloudservices.com/*",
+				"https://waterloo.form.ca.empro.verintcloudservices.com/*"
 			],
 			"js": [
 				"content.js"
@@ -27,7 +30,6 @@
 		"service_worker": "background.js"
 	},
 	"action": {
-		"default_popup": "popup.html",
 		"default_title": "Enlarge License Plate",
 		"default_icon": {
 			"16": "public/icon.png",

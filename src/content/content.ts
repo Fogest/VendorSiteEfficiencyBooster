@@ -49,7 +49,7 @@
 
   let selectorBox = document.createElement("div");
   const boxWidth: number = 280;
-  const boxHeight: number = 160;
+  const boxHeight: number = 80;
 
   let isMouseFollowEnabled = true;
 
@@ -61,21 +61,28 @@
     //   "#dform_widget_html_ahtm_ase_camera_incident_images > p > img"
     // );
 
+    const isProd = window.location.href.includes(
+      "form.ca.empro.verintcloudservices.com"
+    );
+
+    const baseUrl = isProd
+      ? "https://waterloo.form.ca.empro.verintcloudservices.com"
+      : "https://waterlooqa.form.capreview.empro.verintcloudservices.com";
+
     // Get reference number from the page to use in direct URL for image src's
     const refNumber = document.querySelector(
       "#dform_ref_display > span"
     )?.textContent;
 
     const contextOneImageSrc =
-      "https://waterlooqa.form.capreview.empro.verintcloudservices.com/api/private/getfile?ref=" +
+      baseUrl +
+      "/api/private/getfile?ref=" +
       refNumber +
       "&filename=context_1.jpg";
 
     // Load IR Image from the server (Direct URL)
     const irImgSrc =
-      "https://waterlooqa.form.capreview.empro.verintcloudservices.com/api/private/getfile?ref=" +
-      refNumber +
-      "&filename=ir.jpg";
+      baseUrl + "/api/private/getfile?ref=" + refNumber + "&filename=ir.jpg";
 
     if (!contextOneImageSrc) {
       alert("No context_1 image found.");
@@ -415,21 +422,13 @@
 
     saveButton.addEventListener("click", () => {
       const currentImage = getCurrentImage();
-      saveCroppedImage(
-        currentImage,
-        selectorBox,
-        boxWidth,
-        boxHeight,
-        container
-      );
+      saveCroppedImage(currentImage, selectorBox, container);
     });
   }
 
   async function saveCroppedImage(
     image: HTMLImageElement,
     selectorBox: HTMLDivElement,
-    width: number,
-    height: number,
     popupContainer: HTMLElement
   ): Promise<void> {
     const canvas: HTMLCanvasElement = document.createElement("canvas");
@@ -440,8 +439,8 @@
       return;
     }
 
-    canvas.width = 280;
-    canvas.height = 160;
+    canvas.width = boxWidth;
+    canvas.height = boxHeight;
 
     const scale: number = image.naturalWidth / image.width;
     const boxX: number = parseInt(selectorBox.style.left) * scale;
@@ -451,12 +450,12 @@
       image,
       boxX,
       boxY,
-      width * scale,
-      height * scale,
+      boxWidth * scale,
+      boxHeight * scale,
       0,
       0,
-      280,
-      160
+      boxWidth,
+      boxHeight
     );
 
     const blob: Blob = await new Promise((resolve) =>
