@@ -468,4 +468,119 @@
     link.click();
     popupContainer.remove();
   }
+  console.log(
+    "[Debug - MutationObserver] Content script running on:",
+    window.location.href
+  );
+
+  // Avoid injecting multiple times in this frame
+  if (document.getElementById("clonedPlateInput")) {
+    console.log(
+      "[Debug - MutationObserver] Cloned input already exists in this frame. Doing nothing."
+    );
+  } else {
+    // A function to check if both elements exist. If so, inject the cloned input.
+    const tryInjectClonedInput = () => {
+      const plateInput = document.querySelector<HTMLInputElement>(
+        "#dform_widget_txt_platenumber"
+      );
+      const imagesDiv = document.querySelector<HTMLDivElement>(
+        "#dform_widget_html_ahtm_ase_camera_incident_images"
+      );
+
+      console.log(
+        "[Debug - MutationObserver] Checking for plate input & imagesDiv:",
+        { plateInput, imagesDiv }
+      );
+
+      if (plateInput && imagesDiv) {
+        console.log(
+          "[Debug - MutationObserver] Found plate input and imagesDiv. Inserting cloned input..."
+        );
+
+        // Prevent repeated injections
+        if (document.getElementById("clonedPlateInput")) {
+          console.log(
+            "[Debug - MutationObserver] The cloned input is already present. Skipping creation."
+          );
+          return;
+        }
+
+        // 1. Create the cloned input
+        const clonedInput = plateInput.cloneNode(false) as HTMLInputElement;
+
+        // 2. Update the ID and name to avoid conflicts
+        clonedInput.id = "clonedPlateInput";
+        clonedInput.name = "clonedPlateInput";
+
+        // 3. Insert the new input into the DOM (under imagesDiv).
+        imagesDiv.appendChild(clonedInput);
+
+        // 4. Sync from cloned -> real
+        clonedInput.addEventListener("input", () => {
+          // Save the selection range
+          const selStart = clonedInput.selectionStart || 0;
+          const selEnd = clonedInput.selectionEnd || 0;
+
+          // Convert typed text to uppercase
+          const newValue = clonedInput.value.toUpperCase();
+          // Only update if it changed
+          if (newValue !== clonedInput.value) {
+            clonedInput.value = newValue;
+            // Restore the cursor positions
+            clonedInput.selectionStart = selStart;
+            clonedInput.selectionEnd = selEnd;
+          }
+
+          // Now push to the real field
+          plateInput.value = clonedInput.value; // Already uppercase
+          plateInput.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+
+        // 5. Sync from real -> cloned
+        plateInput.addEventListener("input", () => {
+          clonedInput.value = plateInput.value;
+        });
+
+        // 6. Initialize
+        setTimeout(() => {
+          clonedInput.value = plateInput.value;
+          console.log(
+            "[Debug] Cloned input's initial value set to:",
+            clonedInput.value
+          );
+        }, 1000);
+
+        console.log(
+          "[Debug - MutationObserver] Cloned plate input inserted and syncing is set up."
+        );
+      }
+    };
+
+    // Try once in case the elements are already there
+    tryInjectClonedInput();
+
+    // Set up a MutationObserver on the entire body to watch for new elements
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const addedNode of mutation.addedNodes) {
+          if (addedNode.nodeType === Node.ELEMENT_NODE) {
+            // console.log(
+            //   "[Debug - MutationObserver] New element added inside iframe:",
+            //   addedNode
+            // );
+          }
+        }
+      }
+      // Each time something new is added, check if we can inject now
+      tryInjectClonedInput();
+    });
+
+    // Observe the body (or document.documentElement) for child additions anywhere
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    console.log(
+      "[Debug - MutationObserver] Set up MutationObserver in this frame."
+    );
+  }
 })();
