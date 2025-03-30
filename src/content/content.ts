@@ -498,10 +498,10 @@
           "[Debug - MutationObserver] Found plate input and imagesDiv. Inserting cloned input..."
         );
 
-        // Prevent repeated injections
+        // Prevent repeated injections if already added (e.g., by a previous mutation event)
         if (document.getElementById("clonedPlateInput")) {
           console.log(
-            "[Debug - MutationObserver] The cloned input is already present. Skipping creation."
+            "[Debug - MutationObserver] The cloned input is already present (likely from another trigger). Skipping creation."
           );
           return;
         }
@@ -553,6 +553,56 @@
 
         console.log(
           "[Debug - MutationObserver] Cloned plate input inserted and syncing is set up."
+        );
+
+        // 7. Observe the grandparent div of the original input for 'dform_hidden' class changes and sync visibility
+        const plateInputGrandparentDiv =
+          plateInput.parentElement?.parentElement;
+
+        if (!plateInputGrandparentDiv) {
+          console.error(
+            "[Debug - VisibilitySync] Could not find grandparent div of plateInput."
+          );
+          return; // Exit if the structure isn't as expected
+        }
+
+        const handleVisibilitySync = () => {
+          if (plateInputGrandparentDiv.classList.contains("dform_hidden")) {
+            console.log(
+              "[Debug - VisibilitySync] Original input's grandparent is hidden. Hiding cloned input."
+            );
+            clonedInput.style.display = "none";
+          } else {
+            console.log(
+              "[Debug - VisibilitySync] Original input's grandparent is visible. Showing cloned input."
+            );
+            clonedInput.style.display = ""; // Reset display style
+          }
+        };
+
+        // Initial check in case the class is already present when the script runs
+        handleVisibilitySync();
+
+        // Set up observer for class attribute changes on the grandparent div
+        const visibilityObserver = new MutationObserver((mutationsList) => {
+          for (const mutation of mutationsList) {
+            if (
+              mutation.type === "attributes" &&
+              mutation.attributeName === "class"
+            ) {
+              console.log(
+                "[Debug - VisibilitySync] Class attribute changed on original input's grandparent div."
+              );
+              handleVisibilitySync();
+            }
+          }
+        });
+
+        visibilityObserver.observe(plateInputGrandparentDiv, {
+          attributes: true,
+        });
+        console.log(
+          "[Debug - VisibilitySync] Observer set up for original input's grandparent div class attribute."
         );
       }
     };
