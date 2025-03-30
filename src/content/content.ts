@@ -2,7 +2,7 @@
   // Create a floating DIV to hold multiple buttons
   const buttonContainer: HTMLDivElement = document.createElement("div");
   buttonContainer.style.position = "fixed";
-  buttonContainer.style.bottom = "20px";
+  buttonContainer.style.bottom = "40x";
   buttonContainer.style.right = "20px";
   buttonContainer.style.zIndex = "10000";
   document.body.appendChild(buttonContainer);
