@@ -20,19 +20,6 @@
 
   buttonContainer.appendChild(button);
 
-  // Create a button for "Good" image
-  const goodButton: HTMLButtonElement = document.createElement("button");
-  goodButton.textContent = "Good";
-  goodButton.style.padding = "10px 15px";
-  goodButton.style.backgroundColor = "#28a745";
-  goodButton.style.color = "white";
-  goodButton.style.border = "none";
-  goodButton.style.borderRadius = "5px";
-  goodButton.style.cursor = "pointer";
-
-  // Insert before the Open Image Editor button
-  buttonContainer.insertBefore(goodButton, button);
-
   // Create a button for "Good" image that is missing good enlargment ("Partial")
   const partialButton: HTMLButtonElement = document.createElement("button");
   partialButton.textContent = "Partial";
@@ -46,6 +33,186 @@
 
   // Insert before the Open Image Editor button
   buttonContainer.insertBefore(partialButton, button);
+
+  // Create a button for "Good" image
+  const goodButton: HTMLButtonElement = document.createElement("button");
+  goodButton.textContent = "Good";
+  goodButton.style.marginLeft = "2px";
+  goodButton.style.padding = "10px 15px";
+  goodButton.style.backgroundColor = "#28a745";
+  goodButton.style.color = "white";
+  goodButton.style.border = "none";
+  goodButton.style.borderRadius = "5px";
+  goodButton.style.cursor = "pointer";
+
+  // Insert before the Open Image Editor button
+  buttonContainer.insertBefore(goodButton, button);
+
+  // Create "Bad" button with dropdown menu
+  const badWrapper = document.createElement("div");
+  badWrapper.className = "bad-action-wrapper";
+  badWrapper.style.position = "relative";
+  badWrapper.style.display = "inline-block";
+
+  const badButton = document.createElement("button");
+  badButton.className = "quick-action bad-action";
+  badButton.textContent = "Bad";
+  badButton.style.padding = "10px 15px";
+  badButton.style.backgroundColor = "#dc3545";
+  badButton.style.color = "white";
+  badButton.style.border = "none";
+  badButton.style.borderRadius = "5px";
+  badButton.style.cursor = "pointer";
+
+  const badMenu = document.createElement("div");
+  badMenu.className = "bad-options-menu";
+  badMenu.style.display = "none";
+  badMenu.style.position = "absolute";
+  badMenu.style.bottom = "100%";
+  badMenu.style.right = "0";
+  badMenu.style.width = "250px";
+  badMenu.style.backgroundColor = "white";
+  badMenu.style.border = "1px solid #ddd";
+  badMenu.style.borderRadius = "5px";
+  badMenu.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
+  badMenu.style.zIndex = "10001";
+  badMenu.style.overflow = "hidden";
+
+  // Add menu options
+  const addOption = (text: string, params: any) => {
+    const option = document.createElement("div");
+    option.className = "bad-option";
+    option.textContent = text;
+    option.style.padding = "8px 12px";
+    option.style.cursor = "pointer";
+    option.style.borderBottom = "1px solid #eee";
+    option.dataset.code = params.imageCodeNameValue;
+    option.dataset.lpclear =
+      params.licensePlateClear === false ? "false" : "true";
+    if (params.enlargementCorrectClear !== undefined) {
+      option.dataset.enlargementclear =
+        params.enlargementCorrectClear === false ? "false" : "true";
+    }
+    if (params.vehicleMarkerPresent !== undefined) {
+      option.dataset.vehiclemarker =
+        params.vehicleMarkerPresent === false ? "false" : "true";
+    }
+
+    option.addEventListener("mouseenter", () => {
+      option.style.backgroundColor = "#f5f5f5";
+    });
+    option.addEventListener("mouseleave", () => {
+      option.style.backgroundColor = "";
+    });
+    option.addEventListener("click", () => {
+      formAutoComplete(
+        true,
+        params.vehicleMarkerPresent !== false,
+        true,
+        params.licensePlateClear !== false,
+        params.enlargementCorrectClear !== false,
+        true,
+        params.imageCodeNameValue
+      );
+      badMenu.style.display = "none";
+    });
+    return option;
+  };
+
+  // Class 2 options
+  const class2Header = document.createElement("div");
+  class2Header.className = "bad-category-header";
+  class2Header.textContent = "Class 2";
+  class2Header.style.padding = "6px 12px";
+  class2Header.style.backgroundColor = "#f8f9fa";
+  class2Header.style.fontWeight = "bold";
+  badMenu.appendChild(class2Header);
+
+  badMenu.appendChild(
+    addOption("Image Unclear", {
+      imageCodeNameValue: 18,
+      licensePlateClear: false,
+      enlargementCorrectClear: false,
+    })
+  );
+  badMenu.appendChild(
+    addOption("Insufficient Flash", {
+      imageCodeNameValue: 19,
+      licensePlateClear: false,
+      enlargementCorrectClear: false,
+    })
+  );
+  badMenu.appendChild(
+    addOption("Vehicle Marker", {
+      imageCodeNameValue: 61,
+      vehicleMarkerPresent: false,
+    })
+  );
+
+  // Class 3 options
+  const class3Header = document.createElement("div");
+  class3Header.className = "bad-category-header";
+  class3Header.textContent = "Class 3";
+  class3Header.style.padding = "6px 12px";
+  class3Header.style.backgroundColor = "#f8f9fa";
+  class3Header.style.fontWeight = "bold";
+  badMenu.appendChild(class3Header);
+
+  badMenu.appendChild(
+    addOption("Blocked Window", {
+      imageCodeNameValue: 20,
+      licensePlateClear: false,
+      enlargementCorrectClear: false,
+    })
+  );
+  badMenu.appendChild(
+    addOption("Damaged Plate", {
+      imageCodeNameValue: 4,
+      licensePlateClear: false,
+      enlargementCorrectClear: false,
+    })
+  );
+  badMenu.appendChild(
+    addOption("Dirty Plate", {
+      imageCodeNameValue: 22,
+      licensePlateClear: false,
+    })
+  );
+
+  // Generic options
+  const genericHeader = document.createElement("div");
+  genericHeader.className = "bad-category-header";
+  genericHeader.textContent = "Generic";
+  genericHeader.style.padding = "6px 12px";
+  genericHeader.style.backgroundColor = "#f8f9fa";
+  genericHeader.style.fontWeight = "bold";
+  badMenu.appendChild(genericHeader);
+
+  badMenu.appendChild(
+    addOption("Generic Plate Unclear", {
+      imageCodeNameValue: 22,
+      licensePlateClear: false,
+    })
+  );
+
+  // Hover handlers
+  let hideTimeout: number;
+  badButton.addEventListener("mouseover", () => {
+    clearTimeout(hideTimeout);
+    badMenu.style.display = "block";
+  });
+  badWrapper.addEventListener("mouseleave", () => {
+    hideTimeout = window.setTimeout(() => {
+      badMenu.style.display = "none";
+    }, 200);
+  });
+  badMenu.addEventListener("mouseover", () => {
+    clearTimeout(hideTimeout);
+  });
+
+  badWrapper.appendChild(badButton);
+  badWrapper.appendChild(badMenu);
+  buttonContainer.insertBefore(badWrapper, partialButton);
 
   let selectorBox = document.createElement("div");
   const boxWidth: number = 280;
@@ -102,7 +269,7 @@
   });
 
   partialButton.addEventListener("click", () => {
-    formAutoComplete(true, true, true, true, false, true, 1);
+    formAutoComplete(true, true, true, true, false, true, 1, true);
   });
 
   function formAutoComplete(
@@ -113,6 +280,7 @@
     enlargementCorrectClear: boolean = true,
     locationDataBoxMatch: boolean = true,
     imageCodeNameValue: number = 1,
+    triggerEnlargementReupload: boolean = false,
     scrollToElementOnComplete: string = "#dform_widget_button_but_ase_submission"
   ) {
     autoCompleteYesOrNo(
@@ -134,20 +302,30 @@
     autoCompleteYesOrNo(
       "#dform_widget_ase_rad_ase_camera_license_plate_correct_clear",
       enlargementCorrectClear,
-      !enlargementCorrectClear
+      triggerEnlargementReupload
     );
     autoCompleteYesOrNo(
       "#dform_widget_ase_rad_ase_camera_location_data_box_match_site_info",
       locationDataBoxMatch
     );
 
-    // Set Image Code Name selector to the value 1 option
+    // Set Image Code Name selector to the specified value
     const imageCodeNameSelector = document.querySelector(
       "#dform_widget_ase_sel_ase_camera_image_code_name"
     ) as HTMLSelectElement;
 
     if (imageCodeNameSelector) {
-      imageCodeNameSelector.selectedIndex = imageCodeNameValue;
+      // Find option with matching value attribute
+      const options = Array.from(imageCodeNameSelector.options);
+      const targetOption = options.find(
+        (opt) => parseInt(opt.value) === imageCodeNameValue
+      );
+
+      if (targetOption) {
+        targetOption.selected = true;
+      } else {
+        console.warn(`Could not find option with value ${imageCodeNameValue}`);
+      }
     }
 
     // Scroll to element if specified
