@@ -1,12 +1,13 @@
 {
 	"manifest_version": 3,
 	"name": "Vendor Site Efficiency Booster",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"description": "An extension for an internal site",
 	"permissions": [
 		"activeTab",
 		"scripting",
-		"downloads"
+		"downloads",
+		"storage"
 	],
 	"host_permissions": [
 		"https://waterlooqa.desktop.capreview.empro.verintcloudservices.com/*",
@@ -30,7 +31,8 @@
 		"service_worker": "background.js"
 	},
 	"action": {
-		"default_title": "Enlarge License Plate",
+		"default_title": "CMPro Tools",
+		"default_popup": "popup.html",
 		"default_icon": {
 			"16": "public/icon.png",
 			"48": "public/icon.png",

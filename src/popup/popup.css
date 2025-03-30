@@ -1,0 +1,209 @@
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  margin: 0;
+  width: 350px; /* Adjust width as needed */
+  background-color: #f8f9fa; /* Light background for the body */
+}
+
+.container {
+  background-color: #ffffff; /* White background for the main content */
+  padding: 15px;
+  border-radius: 8px; /* Rounded corners for the popup */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  margin: 5px; /* Add margin around the container */
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.header h1 {
+  font-size: 1.2em;
+  margin: 0;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0 5px;
+}
+
+.close-button:hover {
+  color: #343a40;
+}
+
+.input-section {
+  margin-bottom: 15px;
+}
+
+.input-section label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #495057;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.input-group input[type="number"] {
+  flex-grow: 1;
+  padding: 8px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+/* Hide spinner buttons on number input */
+.input-group input[type="number"]::-webkit-inner-spin-button,
+.input-group input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-group input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+.input-group button {
+  padding: 8px 15px;
+  background-color: #0d6efd; /* Blue button */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.input-group button:hover {
+  background-color: #0b5ed7;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #dee2e6;
+  margin: 15px 0;
+}
+
+.officer-list {
+  margin-bottom: 15px;
+  max-height: 200px; /* Add scroll if list gets too long */
+  overflow-y: auto; /* Allow vertical scroll */
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+.officer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 5px 10px 0; /* Add slight right padding to row for button space */
+  border-bottom: 1px solid #e9ecef;
+  position: relative; /* For absolute positioning of remove button */
+  transition: background-color 0.2s ease-in-out; /* Smooth background transition */
+}
+.officer-row:hover {
+  background-color: #f8f9fa; /* Light grey highlight on hover */
+}
+.officer-row:last-child {
+  border-bottom: none;
+}
+
+.officer-info .officer-name {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 3px;
+  color: #212529;
+}
+
+.officer-info .running-total {
+  font-size: 0.85em;
+  color: #6c757d;
+}
+
+.assignment-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9em;
+  color: #495057;
+}
+
+.assignment-info .cases-to-assign {
+  background-color: #e9ecef;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: 500;
+  min-width: 20px; /* Ensure some width even for single digits */
+  text-align: center;
+  color: #212529;
+}
+
+.remove-officer {
+  background: none;
+  border: none;
+  color: #dc3545; /* Red color for remove */
+  font-size: 1.6em; /* Increased font size */
+  line-height: 1; /* Ensure line height doesn't affect centering */
+  cursor: pointer;
+  position: absolute;
+  right: 0px; /* Position flush with the right padding */
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.2s ease-in-out;
+  padding: 5px;
+}
+
+.officer-row:hover .remove-officer {
+  opacity: 1; /* Show on hover */
+}
+
+.footer {
+  display: flex; /* Use flexbox for layout */
+  justify-content: space-between; /* Space out buttons */
+  align-items: center;
+  margin-top: 15px; /* Increased margin */
+  padding-top: 10px; /* Add padding above buttons */
+  border-top: 1px solid #dee2e6; /* Separator line */
+}
+
+/* General button styling in footer */
+.footer button {
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+  border: 1px solid #ced4da; /* Common border */
+}
+
+/* Specific style for Add Officer button */
+#add-officer-button {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+#add-officer-button:hover {
+  background-color: #dee2e6;
+}
+
+/* Style for the new Clear Totals button */
+.secondary-button {
+  background-color: transparent; /* Less prominent background */
+  color: #6c757d; /* Grey text */
+  border-color: #ced4da;
+}
+
+.secondary-button:hover {
+  background-color: #f8f9fa; /* Subtle hover effect */
+  color: #495057;
+}

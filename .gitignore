@@ -34,3 +34,5 @@ npm-debug.log*
 
 # Optional: Ignore coverage directory if you're using a testing framework with coverage reports
 # coverage/
+
+memory-bank/
