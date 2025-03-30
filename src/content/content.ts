@@ -2,7 +2,7 @@
   // Create a floating DIV to hold multiple buttons
   const buttonContainer: HTMLDivElement = document.createElement("div");
   buttonContainer.style.position = "fixed";
-  buttonContainer.style.bottom = "40x";
+  buttonContainer.style.bottom = "40px";
   buttonContainer.style.right = "20px";
   buttonContainer.style.zIndex = "10000";
   document.body.appendChild(buttonContainer);
@@ -112,7 +112,8 @@
     licensePlateClear: boolean = true,
     enlargementCorrectClear: boolean = true,
     locationDataBoxMatch: boolean = true,
-    imageCodeNameValue: number = 1
+    imageCodeNameValue: number = 1,
+    scrollToElementOnComplete: string = "#dform_widget_button_but_ase_submission"
   ) {
     autoCompleteYesOrNo(
       "#dform_widget_ase_rad_ase_camera_incident_exceeded_speed",
@@ -147,6 +148,14 @@
 
     if (imageCodeNameSelector) {
       imageCodeNameSelector.selectedIndex = imageCodeNameValue;
+    }
+
+    // Scroll to element if specified
+    if (scrollToElementOnComplete) {
+      const element = document.querySelector(scrollToElementOnComplete);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
     }
   }
 
