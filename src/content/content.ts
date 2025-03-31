@@ -1,4 +1,121 @@
 (function () {
+  // Check if we're on a bulk action page with isBulkMode=true
+  const urlParams = new URLSearchParams(window.location.search);
+  const isBulkMode = urlParams.get("isBulkMode") === "true";
+
+  // Track the last checkbox clicked for shift-click functionality
+  let lastCheckedIndex: number | null = null;
+
+  // If in bulk mode, set up the bulk selection feature
+  if (isBulkMode) {
+    console.log("[Bulk Mode] Enabling bulk action features");
+
+    // Create the floating box for bulk selection
+    const bulkSelectionBox = document.createElement("div");
+    bulkSelectionBox.style.position = "fixed";
+    bulkSelectionBox.style.bottom = "100px";
+    bulkSelectionBox.style.right = "20px";
+    bulkSelectionBox.style.backgroundColor = "white";
+    bulkSelectionBox.style.border = "1px solid #ccc";
+    bulkSelectionBox.style.borderRadius = "5px";
+    bulkSelectionBox.style.padding = "10px";
+    bulkSelectionBox.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
+    bulkSelectionBox.style.zIndex = "10000";
+    bulkSelectionBox.style.display = "flex";
+    bulkSelectionBox.style.alignItems = "center";
+
+    // Create the number input
+    const numberInput = document.createElement("input");
+    numberInput.type = "number";
+    numberInput.min = "1";
+    numberInput.max = "100";
+    numberInput.value = "10";
+    numberInput.style.width = "60px";
+    numberInput.style.marginRight = "10px";
+    numberInput.style.padding = "5px";
+    numberInput.style.border = "1px solid #ccc";
+    numberInput.style.borderRadius = "3px";
+
+    // Create the grab button
+    const grabButton = document.createElement("button");
+    grabButton.textContent = "Grab";
+    grabButton.style.padding = "5px 10px";
+    grabButton.style.backgroundColor = "#007BFF";
+    grabButton.style.color = "white";
+    grabButton.style.border = "none";
+    grabButton.style.borderRadius = "3px";
+    grabButton.style.cursor = "pointer";
+
+    // Create a status message element
+    const statusMessage = document.createElement("div");
+    statusMessage.style.marginTop = "5px";
+    statusMessage.style.fontSize = "12px";
+    statusMessage.style.color = "#666";
+    statusMessage.style.display = "none";
+
+    // Add elements to the box
+    bulkSelectionBox.appendChild(numberInput);
+    bulkSelectionBox.appendChild(grabButton);
+    bulkSelectionBox.appendChild(statusMessage);
+
+    // Add the box to the page
+    document.body.appendChild(bulkSelectionBox);
+
+    // Add click handler for the grab button
+    grabButton.addEventListener("click", () => {
+      // Get the number of items to select
+      const numToSelect = parseInt(numberInput.value);
+
+      if (isNaN(numToSelect) || numToSelect < 1 || numToSelect > 100) {
+        statusMessage.textContent = "Please enter a number between 1 and 100";
+        statusMessage.style.color = "red";
+        statusMessage.style.display = "block";
+        return;
+      }
+
+      // Find all checkboxes
+      const checkboxes = Array.from(
+        document.querySelectorAll(".select-item-checkbox")
+      ).filter((checkbox) =>
+        checkbox.id.startsWith("item")
+      ) as HTMLInputElement[];
+
+      // Count how many were actually selected
+      let actuallySelected = 0;
+
+      // First, ensure the requested number are checked
+      for (let i = 0; i < Math.min(numToSelect, checkboxes.length); i++) {
+        if (!checkboxes[i].checked) {
+          checkboxes[i].click();
+        }
+        actuallySelected++;
+      }
+
+      // Then ensure all others are unchecked
+      for (let i = numToSelect; i < checkboxes.length; i++) {
+        if (checkboxes[i].checked) {
+          checkboxes[i].click();
+        }
+      }
+
+      // Show status message if not all requested items could be selected
+      if (actuallySelected < numToSelect) {
+        statusMessage.textContent = `Selected ${actuallySelected} out of ${numToSelect} requested (only ${actuallySelected} items available)`;
+        statusMessage.style.color = "orange";
+        statusMessage.style.display = "block";
+      } else {
+        statusMessage.textContent = `Selected ${actuallySelected} items`;
+        statusMessage.style.color = "green";
+        statusMessage.style.display = "block";
+      }
+
+      // Hide the message after 3 seconds
+      setTimeout(() => {
+        statusMessage.style.display = "none";
+      }, 3000);
+    });
+  }
+
   // Create a floating DIV to hold multiple buttons
   const buttonContainer: HTMLDivElement = document.createElement("div");
   buttonContainer.style.position = "fixed";
