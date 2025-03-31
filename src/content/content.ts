@@ -132,7 +132,7 @@
     buttonContainer.style.position = "fixed";
     buttonContainer.style.bottom = "40px";
     // buttonContainer.style.right = "20px";
-    buttonContainer.style.left = "40%";
+    buttonContainer.style.left = "30%";
     buttonContainer.style.zIndex = "10000";
     document.body.appendChild(buttonContainer);
 
