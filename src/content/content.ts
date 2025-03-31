@@ -131,7 +131,8 @@
     const buttonContainer: HTMLDivElement = document.createElement("div");
     buttonContainer.style.position = "fixed";
     buttonContainer.style.bottom = "40px";
-    buttonContainer.style.right = "20px";
+    // buttonContainer.style.right = "20px";
+    buttonContainer.style.left = "40%";
     buttonContainer.style.zIndex = "10000";
     document.body.appendChild(buttonContainer);
 
@@ -174,13 +175,14 @@
     goodButton.style.cursor = "pointer";
 
     // Insert before the Open Image Editor button
-    buttonContainer.insertBefore(goodButton, button);
+    buttonContainer.insertBefore(goodButton, partialButton);
 
     // Create "Bad" button with dropdown menu
     const badWrapper = document.createElement("div");
     badWrapper.className = "bad-action-wrapper";
     badWrapper.style.position = "relative";
     badWrapper.style.display = "inline-block";
+    badWrapper.style.marginLeft = "2px";
 
     const badButton = document.createElement("button");
     badButton.className = "quick-action bad-action";
@@ -359,7 +361,7 @@
 
     badWrapper.appendChild(badButton);
     badWrapper.appendChild(badMenu);
-    buttonContainer.insertBefore(badWrapper, partialButton);
+    buttonContainer.insertBefore(badWrapper, button);
 
     let selectorBox = document.createElement("div");
     const boxWidth: number = 280;
