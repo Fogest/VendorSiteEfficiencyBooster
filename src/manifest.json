@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "Vendor Site Efficiency Booster",
-	"version": "1.5.0",
+	"version": "1.5.1",
 	"description": "An extension for an internal site",
 	"permissions": [
 		"activeTab",

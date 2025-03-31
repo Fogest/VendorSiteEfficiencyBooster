@@ -178,6 +178,25 @@
       licensePlateClear: false,
     })
   );
+  badMenu.appendChild(
+    addOption("Excessive Sun Glare", {
+      imageCodeNameValue: 13,
+      licensePlateClear: false,
+      enlargementCorrectClear: false,
+    })
+  );
+  badMenu.appendChild(
+    addOption("Licence plate obstructed", {
+      imageCodeNameValue: 5,
+      licensePlateClear: false,
+      enlargementCorrectClear: false,
+    })
+  );
+  badMenu.appendChild(
+    addOption("Trailer Plate", {
+      imageCodeNameValue: 11,
+    })
+  );
 
   // Generic options
   const genericHeader = document.createElement("div");
