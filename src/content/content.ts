@@ -809,17 +809,10 @@
       link.click();
       popupContainer.remove();
     }
-    console.log(
-      "[Debug - MutationObserver] Content script running on:",
-      window.location.href
-    );
   }
 
   // Avoid injecting multiple times in this frame
   if (document.getElementById("clonedPlateInput")) {
-    console.log(
-      "[Debug - MutationObserver] Cloned input already exists in this frame. Doing nothing."
-    );
   } else {
     // A function to check if both elements exist. If so, inject the cloned input.
     const tryInjectClonedInput = () => {
@@ -830,21 +823,9 @@
         "#dform_widget_html_ahtm_ase_camera_incident_images"
       );
 
-      console.log(
-        "[Debug - MutationObserver] Checking for plate input & imagesDiv:",
-        { plateInput, imagesDiv }
-      );
-
       if (plateInput && imagesDiv) {
-        console.log(
-          "[Debug - MutationObserver] Found plate input and imagesDiv. Inserting cloned input..."
-        );
-
         // Prevent repeated injections if already added (e.g., by a previous mutation event)
         if (document.getElementById("clonedPlateInput")) {
-          console.log(
-            "[Debug - MutationObserver] The cloned input is already present (likely from another trigger). Skipping creation."
-          );
           return;
         }
 
@@ -892,10 +873,6 @@
             clonedInput.value
           );
         }, 1000);
-
-        console.log(
-          "[Debug - MutationObserver] Cloned plate input inserted and syncing is set up."
-        );
 
         // 7. Observe the grandparent div of the original input for 'dform_hidden' class changes and sync visibility
         const plateInputGrandparentDiv =
@@ -970,9 +947,5 @@
 
     // Observe the body (or document.documentElement) for child additions anywhere
     observer.observe(document.body, { childList: true, subtree: true });
-
-    console.log(
-      "[Debug - MutationObserver] Set up MutationObserver in this frame."
-    );
   }
 })();
