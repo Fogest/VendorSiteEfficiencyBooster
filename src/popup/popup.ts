@@ -10,11 +10,13 @@ interface StorageData {
   officerList?: Officer[];
   dailyTotals?: DailyTotal;
   lastCalculationDate?: string;
+  lastAssignments?: { [key: string]: number }; // Added for persisting assignments
 }
 
 const OFFICER_LIST_KEY = "officerList";
 const DAILY_TOTALS_KEY = "dailyTotals";
 const LAST_CALC_DATE_KEY = "lastCalculationDate";
+const LAST_ASSIGNMENTS_KEY = "lastAssignments"; // Key for assignments
 
 // --- DOM Elements ---
 let totalCasesInput: HTMLInputElement;
@@ -59,11 +61,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Load persistent officer list
   officers = await loadOfficerList();
 
-  // Check date and load/reset daily totals
-  dailyTotals = await checkDateAndLoadTotals();
+  // Check date, load/reset daily totals, and load last assignments
+  const { totals, assignments } = await checkDateAndLoadTotals();
+  dailyTotals = totals; // Update state
 
-  // Render initial UI
-  renderOfficerList();
+  // Render initial UI with loaded assignments
+  renderOfficerList(assignments);
 
   // Attach event listeners
   addOfficerButton.addEventListener("click", handleAddOfficer);
@@ -142,6 +145,28 @@ async function saveLastCalculationDate(date: string): Promise<void> {
   }
 }
 
+async function loadLastAssignments(): Promise<{ [key: string]: number }> {
+  try {
+    const data = (await chrome.storage.local.get(
+      LAST_ASSIGNMENTS_KEY
+    )) as StorageData;
+    return data.lastAssignments || {};
+  } catch (error) {
+    console.error("Error loading last assignments:", error);
+    return {};
+  }
+}
+
+async function saveLastAssignments(assignments: {
+  [key: string]: number;
+}): Promise<void> {
+  try {
+    await chrome.storage.local.set({ [LAST_ASSIGNMENTS_KEY]: assignments });
+  } catch (error) {
+    console.error("Error saving last assignments:", error);
+  }
+}
+
 // --- Date Check ---
 function getTodayDateString(): string {
   const today = new Date();
@@ -151,18 +176,27 @@ function getTodayDateString(): string {
   return `${year}-${month}-${day}`;
 }
 
-async function checkDateAndLoadTotals(): Promise<DailyTotal> {
+// Updated to return both totals and assignments
+async function checkDateAndLoadTotals(): Promise<{
+  totals: DailyTotal;
+  assignments: { [key: string]: number };
+}> {
   const today = getTodayDateString();
   const lastDate = await getLastCalculationDate();
 
   if (lastDate !== today) {
-    console.log("New day detected. Resetting daily totals.");
+    console.log(
+      "New day detected. Resetting daily totals and last assignments."
+    );
     await saveDailyTotals({}); // Reset totals
+    await saveLastAssignments({}); // Reset assignments
     await saveLastCalculationDate(today);
-    return {}; // Return empty totals
+    return { totals: {}, assignments: {} }; // Return empty objects
   } else {
-    // Load existing totals for today
-    return await loadDailyTotals();
+    // Load existing totals and assignments for today
+    const totals = await loadDailyTotals();
+    const assignments = await loadLastAssignments();
+    return { totals, assignments };
   }
 }
 
@@ -317,8 +351,11 @@ async function handleCalculate(): Promise<void> {
       (updatedTotals[officer.name] || 0) + assignments[officer.name];
   });
 
-  // Save the new totals and re-render
+  // Save the new totals and the calculated assignments
   await saveDailyTotals(updatedTotals);
+  await saveLastAssignments(assignments); // Save assignments for persistence
+
+  // Re-render
   renderOfficerList(assignments); // Pass assignments to display "to assign" numbers
   totalCasesInput.value = ""; // Clear input after calculation
 }
@@ -336,6 +373,7 @@ async function handleClearTotals(): Promise<void> {
     clearedTotals[officer.name] = 0; // Reset each officer's total to 0
   });
   await saveDailyTotals(clearedTotals); // Save cleared totals to storage
+  await saveLastAssignments({}); // Clear stored assignments as well
   renderOfficerList(); // Re-render the list to show totals as 0 and remove assignments
-  console.log("Daily totals cleared manually.");
+  console.log("Daily totals and last assignments cleared manually.");
 }
