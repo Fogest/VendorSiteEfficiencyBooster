@@ -13,7 +13,7 @@
     // Create the floating box for bulk selection
     const bulkSelectionBox = document.createElement("div");
     bulkSelectionBox.style.position = "fixed";
-    bulkSelectionBox.style.bottom = "100px";
+    bulkSelectionBox.style.bottom = "100px"; // Keep this distinct from the summary box
     bulkSelectionBox.style.right = "20px";
     bulkSelectionBox.style.backgroundColor = "white";
     bulkSelectionBox.style.border = "1px solid #ccc";
@@ -126,12 +126,69 @@
       "https://waterlooqa.form.capreview.empro.verintcloudservices.com/form/view/app_penalty_order/"
     );
 
+  // --- Storage Keys ---
+  const SUMMARY_BOX_STATE_KEY = "summaryBoxMinimized";
+  const SUMMARY_BOX_POS_TOP_KEY = "summaryBoxTop";
+  const SUMMARY_BOX_POS_LEFT_KEY = "summaryBoxLeft";
+
+  // --- Storage Functions for Summary Box State & Position ---
+  async function getSummaryBoxState(): Promise<boolean> {
+    try {
+      const result = await chrome.storage.local.get(SUMMARY_BOX_STATE_KEY);
+      return result[SUMMARY_BOX_STATE_KEY] || false; // Default to not minimized
+    } catch (error) {
+      console.error("Error getting summary box state:", error);
+      return false; // Fallback state
+    }
+  }
+
+  function saveSummaryBoxState(isMinimized: boolean): void {
+    try {
+      chrome.storage.local.set({ [SUMMARY_BOX_STATE_KEY]: isMinimized });
+    } catch (error) {
+      console.error("Error saving summary box state:", error);
+    }
+  }
+
+  async function getSummaryBoxPosition(): Promise<{
+    top: number | null;
+    left: number | null;
+  }> {
+    try {
+      const result = await chrome.storage.local.get([
+        SUMMARY_BOX_POS_TOP_KEY,
+        SUMMARY_BOX_POS_LEFT_KEY,
+      ]);
+      return {
+        top: result[SUMMARY_BOX_POS_TOP_KEY] ?? null,
+        left: result[SUMMARY_BOX_POS_LEFT_KEY] ?? null,
+      };
+    } catch (error) {
+      console.error("Error getting summary box position:", error);
+      return { top: null, left: null }; // Fallback state
+    }
+  }
+
+  function saveSummaryBoxPosition(top: number, left: number): void {
+    try {
+      chrome.storage.local.set({
+        [SUMMARY_BOX_POS_TOP_KEY]: top,
+        [SUMMARY_BOX_POS_LEFT_KEY]: left,
+      });
+      console.log(`[Debug] Saved position: top=${top}, left=${left}`);
+    } catch (error) {
+      console.error("Error saving summary box position:", error);
+    }
+  }
+  // --- End Storage Functions ---
+
+  let summaryBoxLeftOffset: number | null = null; // Variable to store calculated initial left position
+
   if (showButtons) {
     // Create a floating DIV to hold multiple buttons
     const buttonContainer: HTMLDivElement = document.createElement("div");
     buttonContainer.style.position = "fixed";
     buttonContainer.style.bottom = "40px";
-    // buttonContainer.style.right = "20px";
     buttonContainer.style.left = "30%";
     buttonContainer.style.zIndex = "10000";
     document.body.appendChild(buttonContainer);
@@ -146,7 +203,6 @@
     button.style.border = "none";
     button.style.borderRadius = "5px";
     button.style.cursor = "pointer";
-
     buttonContainer.appendChild(button);
 
     // Create a button for "Good" image that is missing good enlargment ("Partial")
@@ -159,8 +215,6 @@
     partialButton.style.border = "none";
     partialButton.style.borderRadius = "5px";
     partialButton.style.cursor = "pointer";
-
-    // Insert before the Open Image Editor button
     buttonContainer.insertBefore(partialButton, button);
 
     // Create a button for "Good" image
@@ -173,9 +227,19 @@
     goodButton.style.border = "none";
     goodButton.style.borderRadius = "5px";
     goodButton.style.cursor = "pointer";
-
-    // Insert before the Open Image Editor button
     buttonContainer.insertBefore(goodButton, partialButton);
+
+    // --- Calculate Initial Summary Box Position AFTER Good button exists ---
+    setTimeout(() => {
+      if (goodButton) {
+        const goodButtonRect = goodButton.getBoundingClientRect();
+        summaryBoxLeftOffset = goodButtonRect.left + window.scrollX;
+        console.log(
+          "[Debug] Calculated initial summary box left offset:",
+          summaryBoxLeftOffset
+        );
+      }
+    }, 100); // Wait briefly for rendering
 
     // Create "Bad" button with dropdown menu
     const badWrapper = document.createElement("div");
@@ -183,7 +247,6 @@
     badWrapper.style.position = "relative";
     badWrapper.style.display = "inline-block";
     badWrapper.style.marginLeft = "2px";
-
     const badButton = document.createElement("button");
     badButton.className = "quick-action bad-action";
     badButton.textContent = "Bad";
@@ -193,7 +256,6 @@
     badButton.style.border = "none";
     badButton.style.borderRadius = "5px";
     badButton.style.cursor = "pointer";
-
     const badMenu = document.createElement("div");
     badMenu.className = "bad-options-menu";
     badMenu.style.display = "none";
@@ -207,8 +269,6 @@
     badMenu.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
     badMenu.style.zIndex = "10001";
     badMenu.style.overflow = "hidden";
-
-    // Add menu options
     const addOption = (text: string, params: any) => {
       const option = document.createElement("div");
       option.className = "bad-option";
@@ -227,7 +287,6 @@
         option.dataset.vehiclemarker =
           params.vehicleMarkerPresent === false ? "false" : "true";
       }
-
       option.addEventListener("mouseenter", () => {
         option.style.backgroundColor = "#f5f5f5";
       });
@@ -248,8 +307,6 @@
       });
       return option;
     };
-
-    // Class 2 options
     const class2Header = document.createElement("div");
     class2Header.className = "bad-category-header";
     class2Header.textContent = "Class 2";
@@ -257,7 +314,6 @@
     class2Header.style.backgroundColor = "#f8f9fa";
     class2Header.style.fontWeight = "bold";
     badMenu.appendChild(class2Header);
-
     badMenu.appendChild(
       addOption("Image Unclear", {
         imageCodeNameValue: 18,
@@ -278,8 +334,6 @@
         vehicleMarkerPresent: false,
       })
     );
-
-    // Class 3 options
     const class3Header = document.createElement("div");
     class3Header.className = "bad-category-header";
     class3Header.textContent = "Class 3";
@@ -287,7 +341,6 @@
     class3Header.style.backgroundColor = "#f8f9fa";
     class3Header.style.fontWeight = "bold";
     badMenu.appendChild(class3Header);
-
     badMenu.appendChild(
       addOption("Blocked Window", {
         imageCodeNameValue: 20,
@@ -327,8 +380,6 @@
         imageCodeNameValue: 11,
       })
     );
-
-    // Generic options
     const genericHeader = document.createElement("div");
     genericHeader.className = "bad-category-header";
     genericHeader.textContent = "Generic";
@@ -336,15 +387,12 @@
     genericHeader.style.backgroundColor = "#f8f9fa";
     genericHeader.style.fontWeight = "bold";
     badMenu.appendChild(genericHeader);
-
     badMenu.appendChild(
       addOption("Generic Plate Unclear", {
         imageCodeNameValue: 22,
         licensePlateClear: false,
       })
     );
-
-    // Hover handlers
     let hideTimeout: number;
     badButton.addEventListener("mouseover", () => {
       clearTimeout(hideTimeout);
@@ -358,7 +406,6 @@
     badMenu.addEventListener("mouseover", () => {
       clearTimeout(hideTimeout);
     });
-
     badWrapper.appendChild(badButton);
     badWrapper.appendChild(badMenu);
     buttonContainer.insertBefore(badWrapper, button);
@@ -366,50 +413,34 @@
     let selectorBox = document.createElement("div");
     const boxWidth: number = 280;
     const boxHeight: number = 80;
-
     let isMouseFollowEnabled = true;
-
-    let toggleButton: HTMLButtonElement;
+    let imageEditorToggleButton: HTMLButtonElement; // Renamed to avoid conflict
 
     button.addEventListener("click", () => {
-      // Old method of getting image, now direct to the source
-      // const img: HTMLImageElement | null = document.querySelector(
-      //   "#dform_widget_html_ahtm_ase_camera_incident_images > p > img"
-      // );
-
       const isProd = window.location.href.includes(
         "form.ca.empro.verintcloudservices.com"
       );
-
       const baseUrl = isProd
         ? "https://waterloo.form.ca.empro.verintcloudservices.com"
         : "https://waterlooqa.form.capreview.empro.verintcloudservices.com";
-
-      // Get reference number from the page to use in direct URL for image src's
       const refNumber = document.querySelector(
         "#dform_ref_display > span"
       )?.textContent;
-
       const contextOneImageSrc =
         baseUrl +
         "/api/private/getfile?ref=" +
         refNumber +
         "&filename=context_1.jpg";
-
-      // Load IR Image from the server (Direct URL)
       const irImgSrc =
         baseUrl + "/api/private/getfile?ref=" + refNumber + "&filename=ir.jpg";
-
       if (!contextOneImageSrc) {
         alert("No context_1 image found.");
         return;
       }
-
       if (!irImgSrc) {
         alert("No IR image found.");
         return;
       }
-
       openImageEditor(contextOneImageSrc, irImgSrc);
     });
 
@@ -457,19 +488,14 @@
         "#dform_widget_ase_rad_ase_camera_location_data_box_match_site_info",
         locationDataBoxMatch
       );
-
-      // Set Image Code Name selector to the specified value
       const imageCodeNameSelector = document.querySelector(
         "#dform_widget_ase_sel_ase_camera_image_code_name"
       ) as HTMLSelectElement;
-
       if (imageCodeNameSelector) {
-        // Find option with matching value attribute
         const options = Array.from(imageCodeNameSelector.options);
         const targetOption = options.find(
           (opt) => parseInt(opt.value) === imageCodeNameValue
         );
-
         if (targetOption) {
           targetOption.selected = true;
         } else {
@@ -478,8 +504,6 @@
           );
         }
       }
-
-      // Scroll to element if specified
       if (scrollToElementOnComplete) {
         const element = document.querySelector(scrollToElementOnComplete);
         if (element) {
@@ -497,18 +521,13 @@
       const buttonToCheckOff = document.querySelector(
         selector
       ) as HTMLInputElement;
-
-      // Trigger a click on the input element to check it off
       if (buttonToCheckOff) {
         buttonToCheckOff.click();
-
-        // Wait 150 ms before triggering the re-upload button if needed
         if (triggerEnlargementReupload) {
           setTimeout(() => {
             const reuploadButton = document.querySelector(
               "#dform_widget_file_po_camera_upload_photo"
             ) as HTMLButtonElement;
-
             if (reuploadButton) {
               reuploadButton.click();
             }
@@ -522,10 +541,8 @@
       getCurrentImage: () => HTMLImageElement
     ) {
       isMouseFollowEnabled = true;
-
       const onMouseMove = (e: MouseEvent) => {
         if (!isMouseFollowEnabled) return;
-
         const x: number = Math.max(
           0,
           e.clientX - boxWidth / 2 + container.scrollLeft
@@ -534,30 +551,22 @@
           0,
           e.clientY - boxHeight / 2 + container.scrollTop
         );
-
         selectorBox.style.left = `${x}px`;
         selectorBox.style.top = `${y}px`;
       };
-
       const stopMouseFollow = (e: MouseEvent) => {
-        const currentImage = getCurrentImage(); // Retrieve the current image dynamically
-
-        // Ignore clicks on the toggle button or the current image
-        if (e.target === toggleButton || e.target === currentImage) return;
-
+        const currentImage = getCurrentImage();
+        if (e.target === imageEditorToggleButton || e.target === currentImage)
+          return;
         container.removeEventListener("mousemove", onMouseMove);
         isMouseFollowEnabled = false;
-
-        // Remove this click listener
         container.removeEventListener("click", stopMouseFollow);
       };
-
       container.addEventListener("mousemove", onMouseMove);
       container.addEventListener("click", stopMouseFollow);
     }
 
     function openImageEditor(imageUrl: string, irImageUrl: string): void {
-      // Create popup
       const popup: HTMLDivElement = document.createElement("div");
       popup.style.position = "fixed";
       popup.style.top = "0%";
@@ -569,87 +578,54 @@
       popup.style.zIndex = "10001";
       popup.style.overflow = "auto";
       document.body.appendChild(popup);
-
-      // Add toggle button
-      toggleButton = document.createElement("button");
-      toggleButton.textContent = "Switch Image";
-      toggleButton.style.position = "fixed";
-      toggleButton.style.top = "10px";
-      toggleButton.style.left = "10px";
-      toggleButton.style.zIndex = "10002";
-
-      toggleButton.style.padding = "10px 15px";
-      toggleButton.style.backgroundColor = "#007BFF";
-      toggleButton.style.color = "white";
-      toggleButton.style.border = "none";
-      toggleButton.style.borderRadius = "5px";
-      toggleButton.style.cursor = "pointer";
-
-      popup.appendChild(toggleButton);
-
+      imageEditorToggleButton = document.createElement("button");
+      imageEditorToggleButton.textContent = "Switch Image";
+      imageEditorToggleButton.style.position = "fixed";
+      imageEditorToggleButton.style.top = "10px";
+      imageEditorToggleButton.style.left = "10px";
+      imageEditorToggleButton.style.zIndex = "10002";
+      imageEditorToggleButton.style.padding = "10px 15px";
+      imageEditorToggleButton.style.backgroundColor = "#007BFF";
+      imageEditorToggleButton.style.color = "white";
+      imageEditorToggleButton.style.border = "none";
+      imageEditorToggleButton.style.borderRadius = "5px";
+      imageEditorToggleButton.style.cursor = "pointer";
+      popup.appendChild(imageEditorToggleButton);
       const closeButton: HTMLButtonElement = document.createElement("button");
       closeButton.textContent = "Close";
       closeButton.style.position = "fixed";
       closeButton.style.top = "10px";
       closeButton.style.right = "6%";
       closeButton.style.zIndex = "10002";
-
       closeButton.style.padding = "10px 15px";
       closeButton.style.backgroundColor = "red";
       closeButton.style.color = "white";
       closeButton.style.border = "none";
       closeButton.style.borderRadius = "5px";
       closeButton.style.cursor = "pointer";
-
       popup.appendChild(closeButton);
-
       closeButton.addEventListener("click", () => {
         popup.remove();
       });
-
-      // Add image for editing
       const image: HTMLImageElement = new Image();
       image.src = imageUrl;
       image.style.position = "relative";
       image.style.display = "block";
       image.style.margin = "0 auto";
       popup.appendChild(image);
-
-      // Add IR image for editing
       const irImage: HTMLImageElement = new Image();
       irImage.src = irImageUrl;
       irImage.style.position = "relative";
       irImage.style.display = "none";
       irImage.style.margin = "0 auto";
       popup.appendChild(irImage);
-
-      // Center the horizontal scrollbar
       setTimeout(() => {
         popup.scrollLeft = (popup.scrollWidth - popup.clientWidth) / 2 + 150;
         popup.scrollTop = (popup.scrollHeight - popup.clientHeight) / 2 + 175;
       }, 250);
-
       let currentImage = image;
-
-      const onMouseMove = (e: MouseEvent) => {
-        if (!isMouseFollowEnabled) return;
-        const x: number = Math.max(
-          0,
-          e.clientX - boxWidth / 2 + popup.scrollLeft
-        );
-        const y: number = Math.max(
-          0,
-          e.clientY - boxHeight / 2 + popup.scrollTop
-        );
-
-        selectorBox.style.left = `${x}px`;
-        selectorBox.style.top = `${y}px`;
-      };
-
-      toggleButton.addEventListener("click", (e: MouseEvent) => {
-        // Prevent the click from propagating to the popup container
+      imageEditorToggleButton.addEventListener("click", (e: MouseEvent) => {
         e.stopPropagation();
-
         if (currentImage === image) {
           image.style.display = "none";
           irImage.style.display = "block";
@@ -659,13 +635,10 @@
           image.style.display = "block";
           currentImage = image;
         }
-
-        // Re-enable mouse-follow after toggling images
         if (!isMouseFollowEnabled) {
           enableMouseFollow(popup, () => currentImage);
         }
       });
-
       addSelectionBox(popup, () => currentImage);
     }
 
@@ -674,14 +647,12 @@
       getCurrentImage: () => HTMLImageElement
     ): void {
       selectorBox = document.createElement("div");
-
       selectorBox.style.position = "absolute";
       selectorBox.style.border = "2px dashed red";
       selectorBox.style.width = `${boxWidth}px`;
       selectorBox.style.height = `${boxHeight}px`;
       selectorBox.style.cursor = "move";
       container.appendChild(selectorBox);
-
       const onMouseMove = (e: MouseEvent) => {
         const x: number = Math.max(
           0,
@@ -691,76 +662,59 @@
           0,
           e.clientY - boxHeight / 2 + container.scrollTop
         );
-
         selectorBox.style.left = `${x}px`;
         selectorBox.style.top = `${y}px`;
       };
-
       function attachMouseMoveListener() {
         container.addEventListener("mousemove", onMouseMove);
       }
-
       attachMouseMoveListener();
-
       container.addEventListener(
         "click",
         (e) => {
-          // Prevent stopping mouse-follow if the click is on the toggle button
-          if (e.target === toggleButton) return;
-
+          if (e.target === imageEditorToggleButton) return;
           container.removeEventListener("mousemove", onMouseMove);
           isMouseFollowEnabled = false;
         },
         { once: true }
       );
-
       let startX: number = 0,
         startY: number = 0;
-
       selectorBox.addEventListener("mousedown", (e: MouseEvent) => {
         startX = e.clientX - selectorBox.offsetLeft;
         startY = e.clientY - selectorBox.offsetTop;
-
-        const onMouseMove = (e: MouseEvent) => {
+        const onDragMouseMove = (e: MouseEvent) => {
           const x: number = Math.max(
             0,
-            e.clientX - startX + container.scrollLeft
+            e.clientX - startX // No scrollLeft needed here as position is absolute to container
           );
           const y: number = Math.max(
             0,
-            e.clientY - startY + container.scrollTop
+            e.clientY - startY // No scrollTop needed here
           );
-
           selectorBox.style.left = `${x}px`;
           selectorBox.style.top = `${y}px`;
         };
-
-        const onMouseUp = () => {
-          document.removeEventListener("mousemove", onMouseMove);
-          document.removeEventListener("mouseup", onMouseUp);
+        const onDragMouseUp = () => {
+          document.removeEventListener("mousemove", onDragMouseMove);
+          document.removeEventListener("mouseup", onDragMouseUp);
         };
-
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
+        document.addEventListener("mousemove", onDragMouseMove);
+        document.addEventListener("mouseup", onDragMouseUp);
       });
-
-      // Add save button
       const saveButton: HTMLButtonElement = document.createElement("button");
       saveButton.textContent = "Save Selection";
       saveButton.style.position = "fixed";
       saveButton.style.top = "60px";
       saveButton.style.left = "10px";
       saveButton.style.zIndex = "10003";
-
       saveButton.style.padding = "10px 15px";
       saveButton.style.backgroundColor = "rgb(64 149 0)";
       saveButton.style.color = "white";
       saveButton.style.border = "none";
       saveButton.style.borderRadius = "5px";
       saveButton.style.cursor = "pointer";
-
       container.appendChild(saveButton);
-
       saveButton.addEventListener("click", () => {
         const currentImage = getCurrentImage();
         saveCroppedImage(currentImage, selectorBox, container);
@@ -774,19 +728,15 @@
     ): Promise<void> {
       const canvas: HTMLCanvasElement = document.createElement("canvas");
       const ctx: CanvasRenderingContext2D | null = canvas.getContext("2d");
-
       if (!ctx) {
         console.error("Unable to get canvas context");
         return;
       }
-
       canvas.width = boxWidth;
       canvas.height = boxHeight;
-
       const scale: number = image.naturalWidth / image.width;
       const boxX: number = parseInt(selectorBox.style.left) * scale;
       const boxY: number = parseInt(selectorBox.style.top) * scale;
-
       ctx.drawImage(
         image,
         boxX,
@@ -798,11 +748,9 @@
         boxWidth,
         boxHeight
       );
-
       const blob: Blob = await new Promise((resolve) =>
         canvas.toBlob((b) => resolve(b!), "image/jpeg")
       );
-
       const link: HTMLAnchorElement = document.createElement("a");
       link.href = canvas.toDataURL("image/jpeg");
       link.download = "ir_patch.jpg";
@@ -812,60 +760,55 @@
   }
 
   // Avoid injecting multiple times in this frame
-  if (document.getElementById("clonedPlateInput")) {
+  // Check for both cloned input and summary box to prevent duplicates
+  if (
+    document.getElementById("clonedPlateInput") ||
+    document.getElementById("ticket-summary-box")
+  ) {
+    // Already injected, do nothing
   } else {
-    // A function to check if both elements exist. If so, inject the cloned input.
-    const tryInjectClonedInput = () => {
+    // A function to check if all required elements exist. If so, inject components.
+    const tryInjectComponents = () => {
       const plateInput = document.querySelector<HTMLInputElement>(
         "#dform_widget_txt_platenumber"
       );
       const imagesDiv = document.querySelector<HTMLDivElement>(
         "#dform_widget_html_ahtm_ase_camera_incident_images"
       );
+      const refDisplaySpan = document.querySelector<HTMLSpanElement>(
+        "#dform_ref_display > span"
+      );
 
-      if (plateInput && imagesDiv) {
-        // Prevent repeated injections if already added (e.g., by a previous mutation event)
-        if (document.getElementById("clonedPlateInput")) {
+      // Ensure all base elements are present before injecting
+      if (plateInput && imagesDiv && refDisplaySpan?.textContent) {
+        // Prevent repeated injections
+        if (
+          document.getElementById("clonedPlateInput") ||
+          document.getElementById("ticket-summary-box")
+        ) {
           return;
         }
 
-        // 1. Create the cloned input
+        // --- Inject Cloned Plate Input ---
         const clonedInput = plateInput.cloneNode(false) as HTMLInputElement;
-
-        // 2. Update the ID and name to avoid conflicts
         clonedInput.id = "clonedPlateInput";
         clonedInput.name = "clonedPlateInput";
-
-        // 3. Insert the new input into the DOM (under imagesDiv).
         imagesDiv.appendChild(clonedInput);
-
-        // 4. Sync from cloned -> real
         clonedInput.addEventListener("input", () => {
-          // Save the selection range
           const selStart = clonedInput.selectionStart || 0;
           const selEnd = clonedInput.selectionEnd || 0;
-
-          // Convert typed text to uppercase
           const newValue = clonedInput.value.toUpperCase();
-          // Only update if it changed
           if (newValue !== clonedInput.value) {
             clonedInput.value = newValue;
-            // Restore the cursor positions
             clonedInput.selectionStart = selStart;
             clonedInput.selectionEnd = selEnd;
           }
-
-          // Now push to the real field
-          plateInput.value = clonedInput.value; // Already uppercase
+          plateInput.value = clonedInput.value;
           plateInput.dispatchEvent(new Event("input", { bubbles: true }));
         });
-
-        // 5. Sync from real -> cloned
         plateInput.addEventListener("input", () => {
           clonedInput.value = plateInput.value;
         });
-
-        // 6. Initialize
         setTimeout(() => {
           clonedInput.value = plateInput.value;
           console.log(
@@ -873,79 +816,325 @@
             clonedInput.value
           );
         }, 1000);
-
-        // 7. Observe the grandparent div of the original input for 'dform_hidden' class changes and sync visibility
         const plateInputGrandparentDiv =
           plateInput.parentElement?.parentElement;
-
-        if (!plateInputGrandparentDiv) {
-          console.error(
-            "[Debug - VisibilitySync] Could not find grandparent div of plateInput."
-          );
-          return; // Exit if the structure isn't as expected
+        if (plateInputGrandparentDiv) {
+          const handleVisibilitySync = () => {
+            clonedInput.style.display =
+              plateInputGrandparentDiv.classList.contains("dform_hidden")
+                ? "none"
+                : "";
+          };
+          handleVisibilitySync();
+          const visibilityObserver = new MutationObserver(handleVisibilitySync);
+          visibilityObserver.observe(plateInputGrandparentDiv, {
+            attributes: true,
+            attributeFilter: ["class"],
+          });
+        } else {
+          console.error("Could not find grandparent div for visibility sync.");
         }
+        // --- End Cloned Plate Input ---
 
-        const handleVisibilitySync = () => {
-          if (plateInputGrandparentDiv.classList.contains("dform_hidden")) {
+        // --- Inject Ticket Summary Box Structure ---
+        const summaryBoxElement = document.createElement("div");
+        summaryBoxElement.id = "ticket-summary-box";
+        summaryBoxElement.dataset.populated = "false";
+        summaryBoxElement.style.position = "fixed"; // Position is fixed
+        summaryBoxElement.style.cursor = "grab"; // Indicate draggable
+
+        // Apply other styles
+        Object.assign(summaryBoxElement.style, {
+          maxWidth: "180px",
+          backgroundColor: "white",
+          border: "1px solid #ccc",
+          borderRadius: "5px",
+          padding: "5px",
+          paddingTop: "5px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+          zIndex: "10000",
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gap: "2px",
+          fontSize: "11px",
+          transition: "height 0.3s ease, padding 0.3s ease",
+          overflow: "hidden",
+        });
+
+        // --- Set Initial Position ---
+        getSummaryBoxPosition().then((savedPos) => {
+          if (savedPos.top !== null && savedPos.left !== null) {
+            summaryBoxElement.style.top = `${savedPos.top}px`;
+            summaryBoxElement.style.left = `${savedPos.left}px`;
+            summaryBoxElement.style.bottom = "auto"; // Clear potentially conflicting styles
+            summaryBoxElement.style.right = "auto";
             console.log(
-              "[Debug - VisibilitySync] Original input's grandparent is hidden. Hiding cloned input."
+              `[Debug] Applied saved position: top=${savedPos.top}, left=${savedPos.left}`
             );
-            clonedInput.style.display = "none";
           } else {
+            // Use calculated offset or default
+            let initialLeft = "auto";
+            let initialRight = "20px"; // Default right alignment
+            if (summaryBoxLeftOffset !== null) {
+              initialLeft = `${summaryBoxLeftOffset}px`;
+              initialRight = "auto";
+            }
+            summaryBoxElement.style.bottom = "100px"; // Default bottom
+            summaryBoxElement.style.left = initialLeft;
+            summaryBoxElement.style.right = initialRight;
             console.log(
-              "[Debug - VisibilitySync] Original input's grandparent is visible. Showing cloned input."
+              `[Debug] Applied default position: bottom=100px, left=${initialLeft}, right=${initialRight}`
             );
-            clonedInput.style.display = ""; // Reset display style
+          }
+        });
+        // --- End Set Initial Position ---
+
+        const contentWrapperElement = document.createElement("div");
+        contentWrapperElement.style.display = "contents";
+        contentWrapperElement.innerHTML =
+          '<div style="text-align: center; font-style: italic; color: #888;">...</div>';
+        summaryBoxElement.appendChild(contentWrapperElement);
+
+        const toggleButtonElement = document.createElement("div");
+        toggleButtonElement.style.position = "absolute";
+        toggleButtonElement.style.top = "2px";
+        toggleButtonElement.style.right = "4px";
+        toggleButtonElement.style.cursor = "pointer";
+        toggleButtonElement.style.fontSize = "14px";
+        toggleButtonElement.style.lineHeight = "1";
+        toggleButtonElement.title = "Minimize/Expand Summary";
+        summaryBoxElement.appendChild(toggleButtonElement);
+
+        const setMinimizedState = (minimized: boolean) => {
+          const box = document.getElementById("ticket-summary-box");
+          const content = box?.querySelector(
+            "div:not([style*='position: absolute'])"
+          );
+          const toggle = box?.querySelector("div[style*='position: absolute']");
+          if (!box || !content || !toggle) return;
+          if (minimized) {
+            box.style.height = "16px";
+            box.style.padding = "3px 12px";
+            box.style.paddingTop = "2px";
+            (content as HTMLElement).style.display = "none";
+            toggle.innerHTML = "▲";
+          } else {
+            box.style.height = "";
+            box.style.padding = "5px";
+            box.style.paddingTop = "5px";
+            (content as HTMLElement).style.display = "contents";
+            toggle.innerHTML = "▼";
           }
         };
 
-        // Initial check in case the class is already present when the script runs
-        handleVisibilitySync();
-
-        // Set up observer for class attribute changes on the grandparent div
-        const visibilityObserver = new MutationObserver((mutationsList) => {
-          for (const mutation of mutationsList) {
-            if (
-              mutation.type === "attributes" &&
-              mutation.attributeName === "class"
-            ) {
-              console.log(
-                "[Debug - VisibilitySync] Class attribute changed on original input's grandparent div."
-              );
-              handleVisibilitySync();
-            }
-          }
+        toggleButtonElement.addEventListener("click", (e) => {
+          e.stopPropagation(); // Prevent drag from starting on toggle click
+          const box = document.getElementById("ticket-summary-box");
+          const content = box?.querySelector(
+            "div:not([style*='position: absolute'])"
+          );
+          if (!content) return;
+          const isCurrentlyMinimized =
+            (content as HTMLElement).style.display === "none";
+          setMinimizedState(!isCurrentlyMinimized);
+          saveSummaryBoxState(!isCurrentlyMinimized);
         });
 
-        visibilityObserver.observe(plateInputGrandparentDiv, {
-          attributes: true,
+        getSummaryBoxState().then((isMinimized) => {
+          setTimeout(() => setMinimizedState(isMinimized), 0);
         });
-        console.log(
-          "[Debug - VisibilitySync] Observer set up for original input's grandparent div class attribute."
-        );
+
+        // --- Add Drag Functionality ---
+        addDragFunctionality(summaryBoxElement, toggleButtonElement);
+        // --- End Add Drag Functionality ---
+
+        imagesDiv.appendChild(summaryBoxElement);
+        console.log("[Debug] Ticket Summary Box structure injected.");
+        // --- End Ticket Summary Box Injection ---
+      } else {
+        // console.log("[Debug] Not all elements ready for injection...");
       }
     };
 
-    // Try once in case the elements are already there
-    tryInjectClonedInput();
+    // --- Function to Populate Summary Box Data ---
+    const populateSummaryBox = () => {
+      const summaryBox = document.getElementById("ticket-summary-box");
+      if (!summaryBox || summaryBox.dataset.populated === "true") {
+        return;
+      }
+      const contentWrapper = summaryBox.querySelector(
+        "div:not([style*='position: absolute'])"
+      ) as HTMLDivElement;
+      if (!contentWrapper) return;
+      const baseSelector = `.dform_widget > table > tbody > tr:nth-child`;
+      const requiredFieldSelectors = [
+        `${baseSelector}(3) > td:nth-child(2) > strong > span`, // Speed Limit
+        `${baseSelector}(4) > td:nth-child(2) > strong > span`, // Vehicle Speed
+        `${baseSelector}(5) > td:nth-child(2) > strong > span`, // Location
+        `${baseSelector}(6) > td:nth-child(2) > strong > span`, // Violation Time
+        `${baseSelector}(11) > td:nth-child(2) > strong > span`, // Total Fee
+      ];
+      const allFieldsReady = requiredFieldSelectors.every((selector) => {
+        const element = document.querySelector(selector);
+        return element?.textContent?.trim();
+      });
+      if (!allFieldsReady) {
+        return;
+      }
+      console.log("[Debug] Populating Ticket Summary Box data...");
+      const safeQuery = (selector: string): string => {
+        const el = document.querySelector(selector);
+        if (!el?.textContent) {
+          console.warn(`Summary Box: Missing element or text for ${selector}`);
+          return '<i style="color: orange;">Missing</i>';
+        }
+        return el.textContent.trim();
+      };
+      contentWrapper.innerHTML = "";
+      const locationRaw = safeQuery(
+        `${baseSelector}(5) > td:nth-child(2) > strong > span`
+      );
+      const locationElement = document.createElement("div");
+      locationElement.innerHTML = locationRaw;
+      // Apply styles, using setProperty for fontSize with !important
+      locationElement.style.setProperty("font-size", "11px", "important");
+      Object.assign(locationElement.style, {
+        lineHeight: "1.1", // Tighter line height
+        whiteSpace: "normal",
+        wordBreak: "break-word",
+      });
+      contentWrapper.appendChild(locationElement);
+      const timeRaw = safeQuery(
+        `${baseSelector}(6) > td:nth-child(2) > strong > span`
+      );
+      const timeElement = document.createElement("div");
+      const timeMatch = timeRaw.match(
+        /(\w+), (\w+ \d+, \d+) at (\d+:\d+[APM]+)/
+      );
+      if (timeMatch && timeMatch.length === 4) {
+        const shortWeekday = timeMatch[1].substring(0, 3);
+        timeElement.textContent = `${shortWeekday}, ${timeMatch[2]} ${timeMatch[3]}`;
+      } else {
+        timeElement.innerHTML = timeRaw;
+      }
+      timeElement.style.setProperty("font-size", "12px", "important");
+      contentWrapper.appendChild(timeElement);
+      const vehicleSpeedRaw = safeQuery(
+        `${baseSelector}(4) > td:nth-child(2) > strong > span`
+      );
+      const speedLimitRaw = safeQuery(
+        `${baseSelector}(3) > td:nth-child(2) > strong > span`
+      );
+      const speedElement = document.createElement("div");
+      const vs = vehicleSpeedRaw.includes("Missing") ? "?" : vehicleSpeedRaw;
+      const sl = speedLimitRaw.includes("Missing") ? "?" : speedLimitRaw;
+      speedElement.innerHTML = `${vs} / ${sl}`;
 
-    // Set up a MutationObserver on the entire body to watch for new elements
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const addedNode of mutation.addedNodes) {
-          if (addedNode.nodeType === Node.ELEMENT_NODE) {
-            // console.log(
-            //   "[Debug - MutationObserver] New element added inside iframe:",
-            //   addedNode
-            // );
-          }
+      // If vehicle speed greater than 30 over the limit, color red and bold
+      const vehicleSpeed = parseInt(vehicleSpeedRaw);
+      const speedLimit = parseInt(speedLimitRaw);
+      if (!isNaN(vehicleSpeed) && !isNaN(speedLimit)) {
+        if (vehicleSpeed > speedLimit + 30) {
+          speedElement.style.color = "red";
+          speedElement.style.fontWeight = "bold";
         }
       }
-      // Each time something new is added, check if we can inject now
-      tryInjectClonedInput();
+      speedElement.style.setProperty("font-size", "12px", "important");
+      speedElement.style.setProperty("line-height", "1");
+      contentWrapper.appendChild(speedElement);
+      const feeRaw = safeQuery(
+        `${baseSelector}(11) > td:nth-child(2) > strong > span`
+      );
+      const feeElement = document.createElement("div");
+      feeElement.innerHTML = feeRaw.includes("Missing") ? feeRaw : `$${feeRaw}`;
+      feeElement.style.setProperty("font-size", "12px", "important");
+      contentWrapper.appendChild(feeElement);
+      summaryBox.dataset.populated = "true";
+      console.log("[Debug] Ticket Summary Box data populated.");
+    };
+    // --- End Populate Function ---
+
+    // --- Drag Functionality ---
+    function addDragFunctionality(
+      element: HTMLElement,
+      dragHandleExclude: HTMLElement
+    ) {
+      let isDragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      const onMouseDown = (e: MouseEvent) => {
+        // Ignore drag if click is on the minimize button
+        if (e.target === dragHandleExclude) {
+          return;
+        }
+        isDragging = true;
+        // Calculate offset from the element's top-left corner
+        offsetX = e.clientX - element.offsetLeft;
+        offsetY = e.clientY - element.offsetTop;
+        element.style.cursor = "grabbing";
+        element.style.userSelect = "none"; // Prevent text selection during drag
+
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+      };
+
+      const onMouseMove = (e: MouseEvent) => {
+        if (!isDragging) return;
+        // Calculate new position
+        let newTop = e.clientY - offsetY;
+        let newLeft = e.clientX - offsetX;
+
+        // Basic boundary checks (optional, adjust as needed)
+        newTop = Math.max(
+          0,
+          Math.min(newTop, window.innerHeight - element.offsetHeight)
+        );
+        newLeft = Math.max(
+          0,
+          Math.min(newLeft, window.innerWidth - element.offsetWidth)
+        );
+
+        element.style.left = `${newLeft}px`;
+        element.style.top = `${newTop}px`;
+        element.style.right = "auto"; // Ensure right/bottom are not interfering
+        element.style.bottom = "auto";
+      };
+
+      const onMouseUp = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        element.style.cursor = "grab";
+        element.style.removeProperty("user-select");
+
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+
+        // Save the final position (parse pixel values)
+        const finalTop = parseFloat(element.style.top);
+        const finalLeft = parseFloat(element.style.left);
+        if (!isNaN(finalTop) && !isNaN(finalLeft)) {
+          saveSummaryBoxPosition(finalTop, finalLeft);
+        }
+      };
+
+      element.addEventListener("mousedown", onMouseDown);
+    }
+    // --- End Drag Functionality ---
+
+    // Try to inject structure and populate data once initially
+    tryInjectComponents();
+    setTimeout(populateSummaryBox, 500); // Attempt population shortly after initial load
+
+    // Set up a MutationObserver on the entire body
+    const observer = new MutationObserver(() => {
+      // Each time something changes, try to inject the structure if missing
+      tryInjectComponents();
+      // And try to populate the data if the structure exists but data is missing
+      populateSummaryBox();
     });
 
-    // Observe the body (or document.documentElement) for child additions anywhere
+    // Observe the body for child additions and subtree modifications
     observer.observe(document.body, { childList: true, subtree: true });
   }
 })();
