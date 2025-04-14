@@ -1034,7 +1034,7 @@
       const vehicleSpeed = parseInt(vehicleSpeedRaw);
       const speedLimit = parseInt(speedLimitRaw);
       if (!isNaN(vehicleSpeed) && !isNaN(speedLimit)) {
-        if (vehicleSpeed > speedLimit + 30) {
+        if (vehicleSpeed >= speedLimit + 30) {
           speedElement.style.color = "red";
           speedElement.style.fontWeight = "bold";
         }
