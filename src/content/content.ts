@@ -524,6 +524,8 @@
       if (buttonToCheckOff) {
         buttonToCheckOff.click();
         if (triggerEnlargementReupload) {
+          // Set the scroll flag here so it works for both flows
+          chrome.storage.local.set({ pendingScroll: true });
           setTimeout(() => {
             const reuploadButton = document.querySelector(
               "#dform_widget_file_po_camera_upload_photo"
@@ -531,7 +533,7 @@
             if (reuploadButton) {
               reuploadButton.click();
             }
-          }, 100);
+          }, 500);
         }
       }
     }
@@ -755,8 +757,90 @@
       link.href = canvas.toDataURL("image/jpeg");
       link.download = "ir_patch.jpg";
       link.click();
+
+      // Fallback automation: Check for delete button and handle accordingly
+      const deleteButton = document.querySelector(
+        "#dform_widget_button_but_del_irpatch"
+      ) as HTMLButtonElement;
+      if (deleteButton && !deleteButton.classList.contains("dform_hidden")) {
+        chrome.storage.local.set({ pendingPartial: true });
+        deleteButton.click();
+      } else {
+        formAutoComplete(true, true, true, true, false, true, 1, true);
+      }
+
       popupContainer.remove();
     }
+
+    // Check for pending partial after reload
+    function setupPendingPartial() {
+      // Create a new button to finalize the process
+      const finalizeButton = document.createElement("button");
+      finalizeButton.textContent = "Finalize Replacement";
+      finalizeButton.style.position = "fixed";
+      finalizeButton.style.bottom = "80px"; // Position it clearly
+      finalizeButton.style.left = "50%";
+      finalizeButton.style.transform = "translateX(-50%)";
+      finalizeButton.style.zIndex = "10001";
+      finalizeButton.style.padding = "15px 20px";
+      finalizeButton.style.backgroundColor = "#28a745"; // Green for go
+      finalizeButton.style.color = "white";
+      finalizeButton.style.border = "2px solid white";
+      finalizeButton.style.borderRadius = "5px";
+      finalizeButton.style.cursor = "pointer";
+      finalizeButton.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
+
+      document.body.appendChild(finalizeButton);
+
+      finalizeButton.addEventListener(
+        "click",
+        () => {
+          // This click has user activation
+          formAutoComplete(true, true, true, true, false, true, 1, true);
+
+          // Set the scroll flag here to cover the delete/reload workflow
+          chrome.storage.local.set({ pendingScroll: true });
+
+          // Clean up
+          document.body.removeChild(finalizeButton);
+          chrome.storage.local.remove("pendingPartial");
+        },
+        { once: true }
+      ); // The button should only be clickable once
+    }
+
+    chrome.storage.local.get("pendingScroll", (data) => {
+      if (data.pendingScroll) {
+        const interval = setInterval(() => {
+          const elementToScrollTo = document.querySelector(
+            "#dform_widget_button_but_ase_submission"
+          );
+          if (elementToScrollTo) {
+            elementToScrollTo.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+            });
+            clearInterval(interval);
+            chrome.storage.local.remove("pendingScroll");
+          }
+        }, 500);
+      }
+    });
+
+    chrome.storage.local.get("pendingPartial", (data) => {
+      if (data.pendingPartial) {
+        // Wait for the DOM to be ready before adding the button
+        const interval = setInterval(() => {
+          const formElement = document.querySelector(
+            "#dform_widget_ase_rad_ase_camera_incident_exceeded_speed1"
+          );
+          if (formElement) {
+            setupPendingPartial();
+            clearInterval(interval);
+          }
+        }, 500);
+      }
+    });
   }
 
   // Avoid injecting multiple times in this frame
