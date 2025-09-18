@@ -356,19 +356,7 @@
         imageCodeNameValue: 11,
       })
     );
-    const genericHeader = document.createElement("div");
-    genericHeader.className = "bad-category-header";
-    genericHeader.textContent = "Generic";
-    genericHeader.style.padding = "6px 12px";
-    genericHeader.style.backgroundColor = "#f8f9fa";
-    genericHeader.style.fontWeight = "bold";
-    badMenu.appendChild(genericHeader);
-    badMenu.appendChild(
-      addOption("Generic Plate Unclear", {
-        imageCodeNameValue: 22,
-        licensePlateClear: false,
-      })
-    );
+
     let hideTimeout: number;
     badButton.addEventListener("mouseover", () => {
       clearTimeout(hideTimeout);
