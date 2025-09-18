@@ -205,35 +205,11 @@
     button.style.cursor = "pointer";
     buttonContainer.appendChild(button);
 
-    // Create a button for "Good" image that is missing good enlargment ("Partial")
-    const partialButton: HTMLButtonElement = document.createElement("button");
-    partialButton.textContent = "Partial";
-    partialButton.style.marginLeft = "2px";
-    partialButton.style.padding = "10px 15px";
-    partialButton.style.backgroundColor = "#ffc107";
-    partialButton.style.color = "black";
-    partialButton.style.border = "none";
-    partialButton.style.borderRadius = "5px";
-    partialButton.style.cursor = "pointer";
-    buttonContainer.insertBefore(partialButton, button);
-
-    // Create a button for "Good" image
-    const goodButton: HTMLButtonElement = document.createElement("button");
-    goodButton.textContent = "Good";
-    goodButton.style.marginLeft = "2px";
-    goodButton.style.padding = "10px 15px";
-    goodButton.style.backgroundColor = "#28a745";
-    goodButton.style.color = "white";
-    goodButton.style.border = "none";
-    goodButton.style.borderRadius = "5px";
-    goodButton.style.cursor = "pointer";
-    buttonContainer.insertBefore(goodButton, partialButton);
-
-    // --- Calculate Initial Summary Box Position AFTER Good button exists ---
+    // --- Calculate Initial Summary Box Position AFTER button exists ---
     setTimeout(() => {
-      if (goodButton) {
-        const goodButtonRect = goodButton.getBoundingClientRect();
-        summaryBoxLeftOffset = goodButtonRect.left + window.scrollX;
+      if (button) {
+        const buttonRect = button.getBoundingClientRect();
+        summaryBoxLeftOffset = buttonRect.left + window.scrollX;
         console.log(
           "[Debug] Calculated initial summary box left offset:",
           summaryBoxLeftOffset
@@ -442,14 +418,6 @@
         return;
       }
       openImageEditor(contextOneImageSrc, irImgSrc);
-    });
-
-    goodButton.addEventListener("click", () => {
-      formAutoComplete();
-    });
-
-    partialButton.addEventListener("click", () => {
-      formAutoComplete(true, true, true, true, false, true, 1, true);
     });
 
     function formAutoComplete(
