@@ -345,10 +345,37 @@
       })
     );
     badMenu.appendChild(
+      addOption("Excessive Snow", {
+        imageCodeNameValue: 31,
+        licensePlateClear: false,
+        enlargementCorrectClear: false,
+      })
+    );
+    badMenu.appendChild(
+      addOption("Image Adjudication (Privacy)", {
+        imageCodeNameValue: 57,
+      })
+    );
+    badMenu.appendChild(
       addOption("Licence plate obstructed", {
         imageCodeNameValue: 5,
         licensePlateClear: false,
         enlargementCorrectClear: false,
+      })
+    );
+    badMenu.appendChild(
+      addOption("No Licence Plates", {
+        imageCodeNameValue: 3,
+      })
+    );
+    badMenu.appendChild(
+      addOption("Out of Country", {
+        imageCodeNameValue: 58,
+      })
+    );
+    badMenu.appendChild(
+      addOption("Out of Province", {
+        imageCodeNameValue: 10,
       })
     );
     badMenu.appendChild(
