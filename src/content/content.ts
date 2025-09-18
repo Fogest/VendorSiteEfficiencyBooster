@@ -189,7 +189,7 @@
     const buttonContainer: HTMLDivElement = document.createElement("div");
     buttonContainer.style.position = "fixed";
     buttonContainer.style.bottom = "40px";
-    buttonContainer.style.left = "30%";
+    buttonContainer.style.left = "38%";
     buttonContainer.style.zIndex = "10000";
     document.body.appendChild(buttonContainer);
 
