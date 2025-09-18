@@ -26,6 +26,23 @@
             </button>
           </div>
         </div>
+
+        <div class="control-group">
+          <label>Image Editor Auto-Scroll</label>
+          <div class="toggle-row">
+            <label class="toggle-label">
+              <input type="checkbox" id="auto-scroll-toggle" checked>
+              <span class="toggle-text">Enable Auto-Scroll</span>
+            </label>
+          </div>
+          <div class="slider-row" id="scroll-speed-container">
+            <label for="scroll-speed-slider" class="slider-label">Scroll Speed</label>
+            <div class="slider-container">
+              <input type="range" id="scroll-speed-slider" min="5" max="100" value="35" step="5">
+              <span class="slider-value" id="scroll-speed-value">35</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <script src="popup.js"></script>

@@ -82,3 +82,77 @@ body {
 .control-button:active {
   transform: translateY(1px);
 }
+
+.toggle-row {
+  margin-bottom: 15px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: #495057;
+}
+
+.toggle-label input[type="checkbox"] {
+  margin-right: 10px;
+  transform: scale(1.2);
+}
+
+.toggle-text {
+  user-select: none;
+}
+
+.slider-row {
+  margin-top: 10px;
+}
+
+.slider-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85em;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider-container input[type="range"] {
+  flex: 1;
+  height: 6px;
+  background: #e9ecef;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.slider-container input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #0d6efd;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider-container input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #0d6efd;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.slider-value {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #0d6efd;
+  min-width: 25px;
+  text-align: center;
+}

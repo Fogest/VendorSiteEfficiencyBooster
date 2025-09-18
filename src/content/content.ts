@@ -131,6 +131,8 @@
   const SUMMARY_BOX_POS_TOP_KEY = "summaryBoxTop";
   const SUMMARY_BOX_POS_LEFT_KEY = "summaryBoxLeft";
   const SUMMARY_BOX_VISIBLE_KEY = "summaryBoxVisible";
+  const AUTO_SCROLL_ENABLED_KEY = "autoScrollEnabled";
+  const AUTO_SCROLL_SPEED_KEY = "autoScrollSpeed";
 
   // --- Storage Functions for Summary Box State & Position ---
   async function getSummaryBoxState(): Promise<boolean> {
@@ -191,6 +193,26 @@
       return true; // Default to visible
     }
   }
+
+  async function getAutoScrollEnabled(): Promise<boolean> {
+    try {
+      const result = await chrome.storage.local.get(AUTO_SCROLL_ENABLED_KEY);
+      return result[AUTO_SCROLL_ENABLED_KEY] !== false; // Default to true (enabled)
+    } catch (error) {
+      console.error("Error getting auto-scroll enabled state:", error);
+      return true; // Default to enabled
+    }
+  }
+
+  async function getAutoScrollSpeed(): Promise<number> {
+    try {
+      const result = await chrome.storage.local.get(AUTO_SCROLL_SPEED_KEY);
+      return result[AUTO_SCROLL_SPEED_KEY] || 35; // Default to 35
+    } catch (error) {
+      console.error("Error getting auto-scroll speed:", error);
+      return 35; // Default to 35
+    }
+  }
   // --- End Storage Functions ---
 
   let summaryBoxLeftOffset: number | null = null; // Variable to store calculated initial left position
@@ -200,7 +222,7 @@
     const buttonContainer: HTMLDivElement = document.createElement("div");
     buttonContainer.style.position = "fixed";
     buttonContainer.style.bottom = "40px";
-    buttonContainer.style.left = "38%";
+    buttonContainer.style.left = "33%";
     buttonContainer.style.zIndex = "10000";
     document.body.appendChild(buttonContainer);
 
@@ -418,7 +440,7 @@
     let isMouseFollowEnabled = true;
     let imageEditorToggleButton: HTMLButtonElement; // Renamed to avoid conflict
 
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const isProd = window.location.href.includes(
         "form.ca.empro.verintcloudservices.com"
       );
@@ -443,7 +465,7 @@
         alert("No IR image found.");
         return;
       }
-      openImageEditor(contextOneImageSrc, irImgSrc);
+      await openImageEditor(contextOneImageSrc, irImgSrc);
     });
 
     function formAutoComplete(
@@ -532,11 +554,107 @@
       }
     }
 
-    function enableMouseFollow(
+    async function enableMouseFollow(
       container: HTMLElement,
       getCurrentImage: () => HTMLImageElement
     ) {
       isMouseFollowEnabled = true;
+
+      // Auto-scroll variables for enableMouseFollow
+      let autoScrollInterval: number | null = null;
+      const autoScrollEnabled = await getAutoScrollEnabled();
+      const scrollSpeed = await getAutoScrollSpeed();
+      const edgeThreshold = 50;
+
+      // Auto-scroll grace period to prevent immediate scrolling
+      let autoScrollGracePeriod = true;
+      let hasMouseLeftEdgeArea = false;
+
+      // Set grace period for 1.5 seconds after mouse follow is enabled
+      setTimeout(() => {
+        autoScrollGracePeriod = false;
+      }, 1500);
+
+      const startAutoScroll = (deltaX: number, deltaY: number) => {
+        if (autoScrollInterval) return;
+
+        autoScrollInterval = window.setInterval(() => {
+          const currentScrollLeft = container.scrollLeft;
+          const currentScrollTop = container.scrollTop;
+          const maxScrollLeft = container.scrollWidth - container.clientWidth;
+          const maxScrollTop = container.scrollHeight - container.clientHeight;
+
+          let newScrollLeft = currentScrollLeft;
+          let newScrollTop = currentScrollTop;
+
+          if (deltaX > 0 && currentScrollLeft < maxScrollLeft) {
+            newScrollLeft = Math.min(maxScrollLeft, currentScrollLeft + scrollSpeed);
+          } else if (deltaX < 0 && currentScrollLeft > 0) {
+            newScrollLeft = Math.max(0, currentScrollLeft - scrollSpeed);
+          }
+
+          if (deltaY > 0 && currentScrollTop < maxScrollTop) {
+            newScrollTop = Math.min(maxScrollTop, currentScrollTop + scrollSpeed);
+          } else if (deltaY < 0 && currentScrollTop > 0) {
+            newScrollTop = Math.max(0, currentScrollTop - scrollSpeed);
+          }
+
+          if (newScrollLeft === currentScrollLeft && newScrollTop === currentScrollTop) {
+            stopAutoScroll();
+            return;
+          }
+
+          container.scrollLeft = newScrollLeft;
+          container.scrollTop = newScrollTop;
+        }, 50);
+      };
+
+      const stopAutoScroll = () => {
+        if (autoScrollInterval) {
+          clearInterval(autoScrollInterval);
+          autoScrollInterval = null;
+        }
+      };
+
+      const checkEdgeProximity = (boxX: number, boxY: number) => {
+        const boxCenterX = boxX + boxWidth / 2;
+        const boxCenterY = boxY + boxHeight / 2;
+
+        const viewportBoxX = boxCenterX - container.scrollLeft;
+        const viewportBoxY = boxCenterY - container.scrollTop;
+
+        let deltaX = 0;
+        let deltaY = 0;
+
+        if (viewportBoxX < edgeThreshold) {
+          deltaX = -1;
+        } else if (viewportBoxX > container.clientWidth - edgeThreshold) {
+          deltaX = 1;
+        }
+
+        if (viewportBoxY < edgeThreshold) {
+          deltaY = -1;
+        } else if (viewportBoxY > container.clientHeight - edgeThreshold) {
+          deltaY = 1;
+        }
+
+        // Track if mouse has left edge area (for grace period logic)
+        const isInEdgeArea = (deltaX !== 0 || deltaY !== 0);
+        if (!isInEdgeArea && autoScrollGracePeriod) {
+          hasMouseLeftEdgeArea = true;
+        }
+
+        // Only allow auto-scroll if:
+        // 1. Auto-scroll is enabled
+        // 2. Grace period has ended OR mouse has left edge area once
+        // 3. Currently in edge area
+        if (autoScrollEnabled && isInEdgeArea && (!autoScrollGracePeriod || hasMouseLeftEdgeArea)) {
+          startAutoScroll(deltaX, deltaY);
+        } else {
+          stopAutoScroll();
+        }
+      };
+
       const onMouseMove = (e: MouseEvent) => {
         if (!isMouseFollowEnabled) return;
         const x: number = Math.max(
@@ -549,12 +667,16 @@
         );
         selectorBox.style.left = `${x}px`;
         selectorBox.style.top = `${y}px`;
+
+        // Check if we need to auto-scroll
+        checkEdgeProximity(x, y);
       };
       const stopMouseFollow = (e: MouseEvent) => {
         const currentImage = getCurrentImage();
         if (e.target === imageEditorToggleButton || e.target === currentImage)
           return;
         container.removeEventListener("mousemove", onMouseMove);
+        stopAutoScroll(); // Stop auto-scroll when mouse follow stops
         isMouseFollowEnabled = false;
         container.removeEventListener("click", stopMouseFollow);
       };
@@ -562,7 +684,7 @@
       container.addEventListener("click", stopMouseFollow);
     }
 
-    function openImageEditor(imageUrl: string, irImageUrl: string): void {
+    async function openImageEditor(imageUrl: string, irImageUrl: string): Promise<void> {
       const popup: HTMLDivElement = document.createElement("div");
       popup.style.position = "fixed";
       popup.style.top = "0%";
@@ -620,7 +742,7 @@
         popup.scrollTop = (popup.scrollHeight - popup.clientHeight) / 2 + 175;
       }, 250);
       let currentImage = image;
-      imageEditorToggleButton.addEventListener("click", (e: MouseEvent) => {
+      imageEditorToggleButton.addEventListener("click", async (e: MouseEvent) => {
         e.stopPropagation();
         if (currentImage === image) {
           image.style.display = "none";
@@ -632,16 +754,16 @@
           currentImage = image;
         }
         if (!isMouseFollowEnabled) {
-          enableMouseFollow(popup, () => currentImage);
+          await enableMouseFollow(popup, () => currentImage);
         }
       });
-      addSelectionBox(popup, () => currentImage);
+      await addSelectionBox(popup, () => currentImage);
     }
 
-    function addSelectionBox(
+    async function addSelectionBox(
       container: HTMLElement,
       getCurrentImage: () => HTMLImageElement
-    ): void {
+    ): Promise<void> {
       selectorBox = document.createElement("div");
       selectorBox.style.position = "absolute";
       selectorBox.style.border = "2px dashed red";
@@ -649,6 +771,109 @@
       selectorBox.style.height = `${boxHeight}px`;
       selectorBox.style.cursor = "move";
       container.appendChild(selectorBox);
+
+      // Auto-scroll variables
+      let autoScrollInterval: number | null = null;
+      const autoScrollEnabled = await getAutoScrollEnabled();
+      const scrollSpeed = await getAutoScrollSpeed(); // pixels per scroll step
+      const edgeThreshold = 50; // pixels from edge to start scrolling
+
+      // Auto-scroll grace period to prevent immediate scrolling
+      let autoScrollGracePeriod = true;
+      let hasMouseLeftEdgeArea = false;
+
+      // Set grace period for 1.5 seconds after editor opens
+      setTimeout(() => {
+        autoScrollGracePeriod = false;
+      }, 1500);
+
+      const startAutoScroll = (deltaX: number, deltaY: number) => {
+        if (autoScrollInterval) return; // Already scrolling
+
+        autoScrollInterval = window.setInterval(() => {
+          const currentScrollLeft = container.scrollLeft;
+          const currentScrollTop = container.scrollTop;
+          const maxScrollLeft = container.scrollWidth - container.clientWidth;
+          const maxScrollTop = container.scrollHeight - container.clientHeight;
+
+          let newScrollLeft = currentScrollLeft;
+          let newScrollTop = currentScrollTop;
+
+          // Horizontal scrolling
+          if (deltaX > 0 && currentScrollLeft < maxScrollLeft) {
+            newScrollLeft = Math.min(maxScrollLeft, currentScrollLeft + scrollSpeed);
+          } else if (deltaX < 0 && currentScrollLeft > 0) {
+            newScrollLeft = Math.max(0, currentScrollLeft - scrollSpeed);
+          }
+
+          // Vertical scrolling
+          if (deltaY > 0 && currentScrollTop < maxScrollTop) {
+            newScrollTop = Math.min(maxScrollTop, currentScrollTop + scrollSpeed);
+          } else if (deltaY < 0 && currentScrollTop > 0) {
+            newScrollTop = Math.max(0, currentScrollTop - scrollSpeed);
+          }
+
+          // Stop scrolling if we can't scroll further in the requested direction
+          if (newScrollLeft === currentScrollLeft && newScrollTop === currentScrollTop) {
+            stopAutoScroll();
+            return;
+          }
+
+          container.scrollLeft = newScrollLeft;
+          container.scrollTop = newScrollTop;
+        }, 50); // 20 FPS for smooth scrolling
+      };
+
+      const stopAutoScroll = () => {
+        if (autoScrollInterval) {
+          clearInterval(autoScrollInterval);
+          autoScrollInterval = null;
+        }
+      };
+
+      const checkEdgeProximity = (boxX: number, boxY: number) => {
+        const containerRect = container.getBoundingClientRect();
+        const boxCenterX = boxX + boxWidth / 2;
+        const boxCenterY = boxY + boxHeight / 2;
+
+        // Convert absolute box position to viewport-relative position
+        const viewportBoxX = boxCenterX - container.scrollLeft;
+        const viewportBoxY = boxCenterY - container.scrollTop;
+
+        let deltaX = 0;
+        let deltaY = 0;
+
+        // Check horizontal edges
+        if (viewportBoxX < edgeThreshold) {
+          deltaX = -1; // Scroll left
+        } else if (viewportBoxX > container.clientWidth - edgeThreshold) {
+          deltaX = 1; // Scroll right
+        }
+
+        // Check vertical edges
+        if (viewportBoxY < edgeThreshold) {
+          deltaY = -1; // Scroll up
+        } else if (viewportBoxY > container.clientHeight - edgeThreshold) {
+          deltaY = 1; // Scroll down
+        }
+
+        // Track if mouse has left edge area (for grace period logic)
+        const isInEdgeArea = (deltaX !== 0 || deltaY !== 0);
+        if (!isInEdgeArea && autoScrollGracePeriod) {
+          hasMouseLeftEdgeArea = true;
+        }
+
+        // Only allow auto-scroll if:
+        // 1. Auto-scroll is enabled
+        // 2. Grace period has ended OR mouse has left edge area once
+        // 3. Currently in edge area
+        if (autoScrollEnabled && isInEdgeArea && (!autoScrollGracePeriod || hasMouseLeftEdgeArea)) {
+          startAutoScroll(deltaX, deltaY);
+        } else {
+          stopAutoScroll();
+        }
+      };
+
       const onMouseMove = (e: MouseEvent) => {
         const x: number = Math.max(
           0,
@@ -660,6 +885,11 @@
         );
         selectorBox.style.left = `${x}px`;
         selectorBox.style.top = `${y}px`;
+
+        // Check if we need to auto-scroll
+        if (autoScrollEnabled) {
+          checkEdgeProximity(x, y);
+        }
       };
       function attachMouseMoveListener() {
         container.addEventListener("mousemove", onMouseMove);
@@ -670,6 +900,7 @@
         (e) => {
           if (e.target === imageEditorToggleButton) return;
           container.removeEventListener("mousemove", onMouseMove);
+          stopAutoScroll(); // Stop auto-scroll when mouse follow is disabled
           isMouseFollowEnabled = false;
         },
         { once: true }
@@ -690,10 +921,16 @@
           );
           selectorBox.style.left = `${x}px`;
           selectorBox.style.top = `${y}px`;
+
+          // Check if we need to auto-scroll during drag
+          if (autoScrollEnabled) {
+            checkEdgeProximity(x, y);
+          }
         };
         const onDragMouseUp = () => {
           document.removeEventListener("mousemove", onDragMouseMove);
           document.removeEventListener("mouseup", onDragMouseUp);
+          stopAutoScroll(); // Stop auto-scroll when drag ends
         };
         document.addEventListener("mousemove", onDragMouseMove);
         document.addEventListener("mouseup", onDragMouseUp);
@@ -873,7 +1110,9 @@
         // Check if summary box should be visible
         const isVisible = await getSummaryBoxVisibility();
         if (!isVisible) {
-          console.log("[Debug] Summary box is hidden by user setting, skipping injection.");
+          console.log(
+            "[Debug] Summary box is hidden by user setting, skipping injection."
+          );
           isInjecting = false;
           return;
         }
