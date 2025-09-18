@@ -3,51 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Case Division Calculator</title>
+    <title>CMPro Efficiency Booster</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <h1>Case Division Calculator</h1>
+        <h1>CMPro Efficiency Booster</h1>
         <button id="close-button" class="close-button" title="Close">
           &times;
         </button>
       </div>
-      <div class="input-section">
-        <label for="total-cases">Total cases to divide</label>
-        <div class="input-group">
-          <input
-            type="number"
-            id="total-cases"
-            min="0"
-            placeholder="Enter number"
-          />
-          <button id="calculate-button">Calculate</button>
+      <div class="controls-section">
+        <div class="control-group">
+          <label>Summary Box Controls</label>
+          <div class="button-row">
+            <button id="reset-position-button" class="control-button">
+              Reset Position
+            </button>
+            <button id="toggle-visibility-button" class="control-button">
+              Hide Summary Box
+            </button>
+          </div>
         </div>
-      </div>
-      <hr />
-      <div id="officer-list" class="officer-list">
-        <!-- Officer rows will be dynamically inserted here -->
-        <!-- Example Row Structure (for reference):
-            <div class="officer-row">
-                <div class="officer-info">
-                    <span class="officer-name">John Smith</span>
-                    <span class="running-total">Running total: 12</span>
-                </div>
-                <div class="assignment-info">
-                    <span>to assign:</span>
-                    <span class="cases-to-assign">3</span>
-                </div>
-                <button class="remove-officer" data-officer-name="John Smith">&times;</button>
-            </div>
-            -->
-      </div>
-      <div class="footer">
-        <button id="clear-totals-button" class="secondary-button">
-          Clear totals
-        </button>
-        <button id="add-officer-button">+ Add officer</button>
       </div>
     </div>
     <script src="popup.js"></script>

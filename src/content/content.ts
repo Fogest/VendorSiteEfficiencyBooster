@@ -130,6 +130,7 @@
   const SUMMARY_BOX_STATE_KEY = "summaryBoxMinimized";
   const SUMMARY_BOX_POS_TOP_KEY = "summaryBoxTop";
   const SUMMARY_BOX_POS_LEFT_KEY = "summaryBoxLeft";
+  const SUMMARY_BOX_VISIBLE_KEY = "summaryBoxVisible";
 
   // --- Storage Functions for Summary Box State & Position ---
   async function getSummaryBoxState(): Promise<boolean> {
@@ -178,6 +179,16 @@
       console.log(`[Debug] Saved position: top=${top}, left=${left}`);
     } catch (error) {
       console.error("Error saving summary box position:", error);
+    }
+  }
+
+  async function getSummaryBoxVisibility(): Promise<boolean> {
+    try {
+      const result = await chrome.storage.local.get(SUMMARY_BOX_VISIBLE_KEY);
+      return result[SUMMARY_BOX_VISIBLE_KEY] !== false; // Default to true (visible)
+    } catch (error) {
+      console.error("Error getting summary box visibility:", error);
+      return true; // Default to visible
     }
   }
   // --- End Storage Functions ---
@@ -831,8 +842,16 @@
   if (document.getElementById("ticket-summary-box")) {
     // Already injected, do nothing
   } else {
+    // Flag to prevent concurrent injection attempts
+    let isInjecting = false;
+
     // A function to check if all required elements exist. If so, inject components.
-    const tryInjectComponents = () => {
+    const tryInjectComponents = async () => {
+      // Prevent concurrent execution
+      if (isInjecting) {
+        return;
+      }
+      isInjecting = true;
       const plateInput = document.querySelector<HTMLInputElement>(
         "#dform_widget_txt_platenumber"
       );
@@ -847,6 +866,15 @@
       if (plateInput && imagesDiv && refDisplaySpan?.textContent) {
         // Prevent repeated injections
         if (document.getElementById("ticket-summary-box")) {
+          isInjecting = false;
+          return;
+        }
+
+        // Check if summary box should be visible
+        const isVisible = await getSummaryBoxVisibility();
+        if (!isVisible) {
+          console.log("[Debug] Summary box is hidden by user setting, skipping injection.");
+          isInjecting = false;
           return;
         }
 
@@ -973,6 +1001,9 @@
       } else {
         // console.log("[Debug] Not all elements ready for injection...");
       }
+
+      // Reset injection flag
+      isInjecting = false;
     };
 
     // --- Function to Populate Summary Box Data ---
