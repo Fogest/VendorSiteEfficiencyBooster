@@ -207,10 +207,10 @@
   async function getAutoScrollSpeed(): Promise<number> {
     try {
       const result = await chrome.storage.local.get(AUTO_SCROLL_SPEED_KEY);
-      return result[AUTO_SCROLL_SPEED_KEY] || 35; // Default to 35
+      return result[AUTO_SCROLL_SPEED_KEY] || 50; // Default to 50
     } catch (error) {
       console.error("Error getting auto-scroll speed:", error);
-      return 35; // Default to 35
+      return 50; // Default to 50
     }
   }
   // --- End Storage Functions ---
@@ -623,6 +623,14 @@
         const viewportBoxX = boxCenterX - container.scrollLeft;
         const viewportBoxY = boxCenterY - container.scrollTop;
 
+        // Define button exclusion zones (top-left area for Switch Image button and surrounding area)
+        const buttonExclusionWidth = 150; // Width of exclusion zone
+        const buttonExclusionHeight = 60; // Height of exclusion zone
+        const isInButtonExclusionZone = (
+          viewportBoxX < buttonExclusionWidth &&
+          viewportBoxY < buttonExclusionHeight
+        );
+
         let deltaX = 0;
         let deltaY = 0;
 
@@ -648,7 +656,8 @@
         // 1. Auto-scroll is enabled
         // 2. Grace period has ended OR mouse has left edge area once
         // 3. Currently in edge area
-        if (autoScrollEnabled && isInEdgeArea && (!autoScrollGracePeriod || hasMouseLeftEdgeArea)) {
+        // 4. NOT in button exclusion zone
+        if (autoScrollEnabled && isInEdgeArea && (!autoScrollGracePeriod || hasMouseLeftEdgeArea) && !isInButtonExclusionZone) {
           startAutoScroll(deltaX, deltaY);
         } else {
           stopAutoScroll();
@@ -840,6 +849,14 @@
         const viewportBoxX = boxCenterX - container.scrollLeft;
         const viewportBoxY = boxCenterY - container.scrollTop;
 
+        // Define button exclusion zones (top-left area for Switch Image button and surrounding area)
+        const buttonExclusionWidth = 150; // Width of exclusion zone
+        const buttonExclusionHeight = 60; // Height of exclusion zone
+        const isInButtonExclusionZone = (
+          viewportBoxX < buttonExclusionWidth &&
+          viewportBoxY < buttonExclusionHeight
+        );
+
         let deltaX = 0;
         let deltaY = 0;
 
@@ -867,7 +884,8 @@
         // 1. Auto-scroll is enabled
         // 2. Grace period has ended OR mouse has left edge area once
         // 3. Currently in edge area
-        if (autoScrollEnabled && isInEdgeArea && (!autoScrollGracePeriod || hasMouseLeftEdgeArea)) {
+        // 4. NOT in button exclusion zone
+        if (autoScrollEnabled && isInEdgeArea && (!autoScrollGracePeriod || hasMouseLeftEdgeArea) && !isInButtonExclusionZone) {
           startAutoScroll(deltaX, deltaY);
         } else {
           stopAutoScroll();

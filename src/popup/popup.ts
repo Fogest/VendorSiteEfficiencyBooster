@@ -19,7 +19,7 @@ let scrollSpeedContainer: HTMLDivElement;
 // State
 let summaryBoxVisible = true; // Default to visible
 let autoScrollEnabled = true; // Default to enabled
-let autoScrollSpeed = 35; // Default speed
+let autoScrollSpeed = 50; // Default speed
 
 // Initialization
 document.addEventListener("DOMContentLoaded", async () => {
@@ -122,10 +122,10 @@ async function getAutoScrollEnabled(): Promise<boolean> {
 async function getAutoScrollSpeed(): Promise<number> {
   try {
     const data = await chrome.storage.local.get(AUTO_SCROLL_SPEED_KEY);
-    return data[AUTO_SCROLL_SPEED_KEY] || 35; // Default to 35
+    return data[AUTO_SCROLL_SPEED_KEY] || 50; // Default to 50
   } catch (error) {
     console.error("Error loading auto-scroll speed:", error);
-    return 35; // Default speed
+    return 50; // Default speed
   }
 }
 
