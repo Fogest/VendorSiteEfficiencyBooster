@@ -827,11 +827,8 @@
   }
 
   // Avoid injecting multiple times in this frame
-  // Check for both cloned input and summary box to prevent duplicates
-  if (
-    document.getElementById("clonedPlateInput") ||
-    document.getElementById("ticket-summary-box")
-  ) {
+  // Check for summary box to prevent duplicates
+  if (document.getElementById("ticket-summary-box")) {
     // Already injected, do nothing
   } else {
     // A function to check if all required elements exist. If so, inject components.
@@ -849,59 +846,14 @@
       // Ensure all base elements are present before injecting
       if (plateInput && imagesDiv && refDisplaySpan?.textContent) {
         // Prevent repeated injections
-        if (
-          document.getElementById("clonedPlateInput") ||
-          document.getElementById("ticket-summary-box")
-        ) {
+        if (document.getElementById("ticket-summary-box")) {
           return;
         }
 
-        // --- Inject Cloned Plate Input ---
-        const clonedInput = plateInput.cloneNode(false) as HTMLInputElement;
-        clonedInput.id = "clonedPlateInput";
-        clonedInput.name = "clonedPlateInput";
-        imagesDiv.appendChild(clonedInput);
-        clonedInput.addEventListener("input", () => {
-          const selStart = clonedInput.selectionStart || 0;
-          const selEnd = clonedInput.selectionEnd || 0;
-          const newValue = clonedInput.value.toUpperCase();
-          if (newValue !== clonedInput.value) {
-            clonedInput.value = newValue;
-            clonedInput.selectionStart = selStart;
-            clonedInput.selectionEnd = selEnd;
-          }
-          plateInput.value = clonedInput.value;
-          plateInput.dispatchEvent(new Event("input", { bubbles: true }));
-        });
-        plateInput.addEventListener("input", () => {
-          clonedInput.value = plateInput.value;
-        });
+        // Set focus to the original plate input
         setTimeout(() => {
-          clonedInput.value = plateInput.value;
-          console.log(
-            "[Debug] Cloned input's initial value set to:",
-            clonedInput.value
-          );
+          plateInput.focus();
         }, 1000);
-        const plateInputGrandparentDiv =
-          plateInput.parentElement?.parentElement;
-        if (plateInputGrandparentDiv) {
-          const handleVisibilitySync = () => {
-            clonedInput.style.display =
-              plateInputGrandparentDiv.classList.contains("dform_hidden")
-                ? "none"
-                : "";
-          };
-          handleVisibilitySync();
-          const visibilityObserver = new MutationObserver(handleVisibilitySync);
-          visibilityObserver.observe(plateInputGrandparentDiv, {
-            attributes: true,
-            attributeFilter: ["class"],
-          });
-        } else {
-          console.error("Could not find grandparent div for visibility sync.");
-        }
-        // --- End Cloned Plate Input ---
 
         // --- Inject Ticket Summary Box Structure ---
         const summaryBoxElement = document.createElement("div");
